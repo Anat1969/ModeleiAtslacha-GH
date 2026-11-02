@@ -130,3 +130,10 @@ export function suggest(data, description) {
   }
   return { answers, hits };
 }
+
+// השוואה בין ההצעה לבין מה שנבחר בפועל: כך המנוע מודד את האמינות של עצמו (סעיף 7 בהנחיות).
+export function compareSuggestion(suggested, final) {
+  const keys = Object.keys(suggested || {});
+  const misses = keys.filter((k) => final[k] !== suggested[k]).map((k) => ({ key: k, suggested: suggested[k], chosen: final[k] }));
+  return { total: keys.length, agree: keys.length - misses.length, misses };
+}
