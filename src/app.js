@@ -1,6 +1,7 @@
 // מתאם מודלים: ממשק. כל הטקסט התוכני מגיע מ-data/models.json, וההתאמה מ-matcher.js.
 // כל דף הוא קומפוזיציה בגובה המסך: מוקד גרפי אחד, וטורי צד. בנייד: לשוניות במקום גלילה.
-import { match, findModel, labelOf, titleOf, QUESTION_KEYS } from './matcher.js';
+import { match, findModel, labelOf, titleOf, QUESTION_KEYS, suggest } from './matcher.js';
+import { attachVoice } from './voice.js';
 import { glyph, driftChart, optionGlyph, DiagnosisCube, EV_COLOR } from './graphics.js';
 let demoTimer = null;
 
@@ -248,6 +249,20 @@ function isoStack(selected, answers) {
   return `<div class="iso"><span class="label">אתר בתחתית, תכולה בראש</span><svg viewBox="0 0 330 ${20 + (n - 1) * step + d + h + 10}" aria-label="שכבות הגזירה של בניין">${svg}</svg><p class="src">Brand, 1994</p></div>`;
 }
 
+// הצעה מתוך התיאור: מה הוצע, ואיזו מילה הובילה לכך. ההחלטה נשארת אצל המשתמשת.
+function suggestBox(text, answers) {
+  const { answers: sug, hits } = suggest(DATA, text);
+  const keys = QUESTION_KEYS.filter((k) => sug[k]);
+  if (!text || !text.trim()) return `<p class="src">כתבי או הקליטי את הבעיה, והאפליקציה תציע תשובות לפי המילים בתיאור.</p>`;
+  if (!keys.length) return `<p class="src">לא זוהו מילות מפתח בתיאור. אפשר לבחור משימה מהרשימה.</p>`;
+  const merged = { ...sug, ...answers };
+  const first = QUESTION_KEYS.findIndex((k) => !merged[k]);
+  return `<div class="sugg"><span class="label">הצעה מתוך התיאור · ${keys.length} מתוך ${QUESTION_KEYS.length}</span>
+    ${keys.map((k) => `<div class="sg-row"><span class="num qn">${QUESTION_KEYS.indexOf(k)}</span><span class="sg-k">${esc(titleOf(DATA, k))}</span><strong>${esc(labelOf(DATA, k, sug[k]))}</strong><span class="sg-w">${hits[k].map((w) => `<mark class="insight">${esc(w)}</mark>`).join(' ')}</span></div>`).join('')}
+    <a class="press btn btn-quiet" data-apply href="${href('diagnose', { ...merged, step: first < 0 ? 1 : Math.max(first, 1), sug: 1 })}">להחיל את ההצעה ולאשר שלב אחר שלב</a>
+    <p class="src">הצעה שקופה לפי מילים, לא אבחון. כל תשובה מסומנת, ואפשר לשנות אותה.</p></div>`;
+}
+
 function option(o, on, url, g) {
   return `<a class="press opt" href="${url}" aria-pressed="${on}" role="button">${g || ''}<b>${esc(o.label)}</b>${o.years ? `<span class="yrs">${esc(o.years)}</span>` : ''}<span class="hint">${esc(o.hint)}</span></a>`;
 }
@@ -261,13 +276,16 @@ function diagnose(params) {
   let head, body;
   if (key === 'intent') {
     head = `<span class="step">שלב 0 מתוך 5</span><h1 class="q-h">מה המשימה שלפנייך?</h1><p class="q-insight">המשימה בוחרת מועמד. חמש השאלות בודקות אותו.</p>
-      <label class="label" for="desc">תיאור הבעיה במשפט (לא חובה, נשמר ביומן)</label>
-      <textarea id="desc" class="field" placeholder="למשל: תושבי הרובע חלוקים על תוכנית ההתחדשות">${esc(store.get(DRAFT_KEY, ''))}</textarea><span class="saved" aria-live="polite">נשמר</span>`;
+      <label class="label" for="desc">תיאור הבעיה, בכתב או בקול (לא חובה, נשמר ביומן)</label>
+      <textarea id="desc" class="field" placeholder="למשל: תושבי הרובע חלוקים על תוכנית ההתחדשות">${esc(store.get(DRAFT_KEY, ''))}</textarea><span class="saved" aria-live="polite">נשמר</span>
+      <div id="sugg">${suggestBox(store.get(DRAFT_KEY, ''), answers)}</div>`;
     body = `<div class="options opts-intent">${DATA.intents.map((o) => option(o, answers.intent === o.id, href('diagnose', { ...answers, intent: o.id, step: 1 }))).join('')}</div>`;
   } else {
     const q = DATA.questions.find((x) => x.id === key);
-    head = `<span class="step">שאלה ${q.step} מתוך 5</span><h1 class="q-h">${esc(q.title)}</h1><p class="q-insight">${rich(q.insight)}</p><p class="muted small">${lines(q.explain)}</p><p class="src">${esc(q.source)}</p>`;
-    const target = (o) => (step + 1 < STEPS.length ? href('diagnose', { ...answers, [key]: o.id, step: step + 1 }) : href('result', { ...answers, [key]: o.id }));
+    const sugNote = params.sug && answers[key] ? `<p class="tone tone-insight small">ההצעה מהתיאור סימנה כאן <strong>${esc(labelOf(DATA, key, answers[key]))}</strong>. לחיצה מאשרת או משנה.</p>` : '';
+    head = sugNote + `<span class="step">שאלה ${q.step} מתוך 5</span><h1 class="q-h">${esc(q.title)}</h1><p class="q-insight">${rich(q.insight)}</p><p class="muted small">${lines(q.explain)}</p><p class="src">${esc(q.source)}</p>`;
+    const keep = params.sug ? { sug: 1 } : {};
+    const target = (o) => (step + 1 < STEPS.length ? href('diagnose', { ...answers, [key]: o.id, step: step + 1, ...keep }) : href('result', { ...answers, [key]: o.id }));
     const opts = `<div class="options">${q.options.map((o) => option(o, answers[key] === o.id, target(o), optionGlyph(key, o.id))).join('')}</div>`;
     const m = q.modelId && key !== 'layer' ? findModel(DATA, q.modelId) : null;
     const illo = m ? `<figure class="q-fig"><div class="q-fig-g">${glyph(m)}</div><figcaption><strong>${esc(m.name)}</strong><span class="src">${esc(m.author)}, ${m.year || ''}. שרטוט מוסבר.</span><a class="press btn btn-quiet" href="${href('model/' + m.id)}">לכרטיס המקור</a></figcaption></figure>` : '';
@@ -622,6 +640,7 @@ function render() {
   setMenuItems(page);
   if (page === 'home') mountHome();
   if (page === 'result') mountResult();
+  app.querySelectorAll('textarea.field').forEach((f) => attachVoice(f));
   const h = app.querySelector('h1');
   document.title = `${h ? h.textContent.trim().slice(0, 50) : ''} · מתאם מודלים`;
 }
@@ -722,7 +741,11 @@ app.addEventListener('keydown', (ev) => {
   if (slab && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); location.hash = slab.dataset.href; }
 });
 app.addEventListener('input', (ev) => {
-  if (ev.target.id === 'desc' && store.set(DRAFT_KEY, ev.target.value)) flashSaved();
+  if (ev.target.id === 'desc') {
+    if (store.set(DRAFT_KEY, ev.target.value)) flashSaved();
+    const box = document.getElementById('sugg');
+    if (box) box.innerHTML = suggestBox(ev.target.value, answersFrom(parseRoute().params));
+  }
   if (ev.target.id === 'note') saveDecision({ note: ev.target.value });
 });
 addEventListener('hashchange', () => { render(); scrollTo({ top: 0 }); });

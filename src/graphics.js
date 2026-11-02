@@ -154,6 +154,13 @@ const G = {
       '<path class="g-grid" d="M50 17 L30 29 M50 17 L50 29 M50 17 L70 29 M30 39 L22 53 M30 39 L38 53 M70 39 L62 53 M70 39 L78 53 M38 63 L30 77 M62 63 L70 77"/></g>';
     return b + T(128, 104, 'שרשרת', 'g-s g-b') + T(50, 104, 'המציאות: עץ', 'g-s');
   },
+  'pattern-language': () => {
+    const L = [[[80, 14]], [[40, 44], [80, 44], [120, 44]], [[24, 74], [52, 74], [80, 74], [108, 74], [136, 74]]];
+    const E = [[0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 1, 2], [1, 0, 2, 0], [1, 0, 2, 1], [1, 1, 2, 1], [1, 1, 2, 2], [1, 1, 2, 3], [1, 2, 2, 3], [1, 2, 2, 4]];
+    let b = E.map(([a, i, c, j], k) => `<line class="g-line draw" style="--d:${k * 50}ms" x1="${L[a][i][0]}" y1="${L[a][i][1]}" x2="${L[c][j][0]}" y2="${L[c][j][1]}"/>`).join('');
+    L.forEach((row, r) => row.forEach(([x, y], i) => { const on = r === 1 && i === 1; const sz = [10, 8, 6][r]; b += `<rect class="${on ? 'g-ink' : 'g-cell'} pop" style="--d:${(r * 3 + i) * 60}ms" x="${x - sz}" y="${y - sz}" width="${sz * 2}" height="${sz * 2}"/>`; }));
+    return b + T(150, 18, 'אזור', 'g-s') + T(150, 48, 'בית', 'g-s') + T(150, 92, 'חלון', 'g-s') + T(64, 104, 'רשת, לא רשימה', 'g-s');
+  },
 };
 
 const DEFS = '<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>';

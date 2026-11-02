@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
+const DATA = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/models.json'), 'utf8'));
 const MENU = fs.readFileSync(path.join(__dirname, 'fixtures/ai-menu.js'), 'utf8');
 const SHOTS = process.env.SHOTS || path.join(ROOT, 'docs/shots');
 const BASE = process.argv[2] || 'http://localhost:4173/';
@@ -45,7 +46,7 @@ async function ready(url) {
     ok(!(await page.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), `${name}: אין כפתורי פיתוח חופשיים בסרגל`);
     ok((await page.locator('h1').first().textContent()).includes('לפי הבעיה'), `${name}: כותרת דף הבית`);
     await pane('stage');
-    ok(await page.locator('.dom').count() === 8 && await page.locator('.unit-sq').count() === 25, `${name}: מפת התחומים: 8 תחומים, 25 מודלים`);
+    ok(await page.locator('.dom').count() === DATA.categories.length && await page.locator('.unit-sq').count() === DATA.models.length, `${name}: מפת התחומים: ${DATA.categories.length} תחומים, ${DATA.models.length} מודלים`);
     ok(await page.locator('.smap .sm-node').count() === 4 || mob, `${name}: מבנה האפליקציה מוסבר בדף הבית`);
     await page.click('[data-tab="space"]');
     await page.waitForTimeout(900);
@@ -68,6 +69,12 @@ async function ready(url) {
 
     // מקרה 1: תכנון שכונה, דרך הממשק, לחיצה אחרי לחיצה
     await go('#/diagnose?step=0');
+    await page.fill('#desc', 'תכנון שכונה חדשה ברובע ט״ו');
+    ok(await page.locator('.voice-btn').count() === 1, `${name}: כפתור הקלטה ותמלול ליד שדה התיאור`);
+    await page.fill('#desc', 'תכנון שכונה חדשה: התושבים חלוקים, ויש התנגדות לבנייה על המגרש');
+    await page.waitForTimeout(200);
+    ok(await page.locator('.sg-row').count() >= 3 && (await page.locator('#sugg').textContent()).includes('התנגדות'), `${name}: הצעת אבחון מתוך התיאור, עם המילים שהובילו אליה`);
+    ok((await page.locator('[data-apply]').getAttribute('href')).includes('agreement=no'), `${name}: החלת ההצעה ממלאת את התשובות`);
     await page.fill('#desc', 'תכנון שכונה חדשה ברובע ט״ו');
     await page.click('.opt >> text=צורכי משתמשים במרחב או בשירות');
     await page.click('.opt >> text=מורכבת');
@@ -92,6 +99,7 @@ async function ready(url) {
     ok((await page.locator('.checks tbody tr td.num').first().textContent()).trim() === '0', `${name}: "איך חושב" ממוספר לפי סדר השאלות`);
     await pane('act');
     await page.click('[data-changed="yes"]');
+    ok(await page.locator('#note + .voice .voice-btn').count() === 1, `${name}: הקלטה ותמלול גם בשדה ההערה`);
     await page.fill('#note', 'עברנו מתוכנית אחת לשלושה סבבי שיתוף');
     await page.waitForTimeout(300);
     ok(await page.locator('.saved.show').count() > 0, `${name}: חיווי "נשמר"`);

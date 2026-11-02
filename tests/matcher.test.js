@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { match, findModel, QUESTION_KEYS } from '../src/matcher.js';
+import { match, findModel, QUESTION_KEYS, suggest } from '../src/matcher.js';
 
 const data = JSON.parse(readFileSync(new URL('../data/models.json', import.meta.url), 'utf8'));
 
@@ -198,4 +198,30 @@ test('פוסט לכל מודל: 80 עד 150 מילים, ומסתיים בשאל�
     assert.ok(m.post.trim().endsWith('?'), `${m.id}: מסתיים בשאלה`);
     assert.ok(!/#/.test(m.post), `${m.id}: בלי האשטגים`);
   }
+});
+
+// ---------- הצעת אבחון מתוך תיאור חופשי ----------
+test('הצעה: תכנון שכונה עם התנגדות -> מחלוקת, אתר, ציבור', () => {
+  const r = suggest(data, 'תכנון שכונה חדשה: התושבים חלוקים על התוכנית, יש התנגדות לבנייה על המגרש, ויש לנו מעט נתונים');
+  assert.equal(r.answers.agreement, 'no');
+  assert.equal(r.answers.layer, 'site');
+  assert.equal(r.answers.unit, 'public');
+  assert.ok(r.hits.agreement.includes('התנגדות'), 'מראה את המילה שהובילה להצעה');
+});
+test('הצעה: תקציב לקו רכבת בעירייה -> תקציב, מבנה, ארגון, יש נתונים', () => {
+  const r = suggest(data, 'תקציב ולוח זמנים להקמת קו רכבת קלה בעירייה. יש נתונים מפרויקטים בערים אחרות');
+  assert.deepEqual([r.answers.intent, r.answers.layer, r.answers.unit, r.answers.data], ['budget', 'structure', 'org', 'yes']);
+});
+test('הצעה: שיתוף ציבור בכיכר -> צורכי משתמשים, חלוקת חלל, ציבור', () => {
+  const r = suggest(data, 'שיתוף ציבור בתכנון הכיכר: מה התושבים צריכים מהמרחב');
+  assert.deepEqual([r.answers.intent, r.answers.layer, r.answers.unit], ['users', 'space', 'public']);
+});
+test('הצעה: מילה קצרה רק כמילה שלמה, ותיאור ריק לא מציע', () => {
+  assert.equal(suggest(data, 'אניסון ותיאוריה').answers.unit, undefined, '"אני" לא נתפס בתוך מילה אחרת');
+  assert.deepEqual(suggest(data, '').answers, {});
+});
+test('כל ערך במילון הוא תשובה קיימת', () => {
+  const valid = Object.fromEntries(data.questions.map((q) => [q.id, q.options.map((o) => o.id)]));
+  valid.intent = data.intents.map((i) => i.id);
+  for (const [k, vals] of Object.entries(data.lexicon)) for (const v of Object.keys(vals)) assert.ok(valid[k]?.includes(v), `${k}=${v}`);
 });

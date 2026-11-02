@@ -615,3 +615,18 @@ a.card.ccard, a.card.mcard { display: grid; }
   mark.insight { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .print-report * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ===== הקלטה ותמלול ===== */
+.voice { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.voice-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; font-size: 13px; }
+.voice-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cut); display: inline-block; }
+.voice-btn[aria-pressed="true"] { background: var(--cut); border-color: var(--cut); color: #fff; }
+.voice-btn[aria-pressed="true"] .voice-dot { background: #fff; animation: pulse-dot 1s ease-in-out infinite; }
+@keyframes pulse-dot { 50% { opacity: .3; } }
+.voice-note { font-size: 12px; color: var(--ink-soft); }
+
+/* ===== הצעה מתוך התיאור ===== */
+.sugg { border: 1px solid var(--rule); border-right: 3px solid #E2BE00; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.sg-row { display: grid; grid-template-columns: 22px 90px minmax(0, 1fr); gap: 6px; align-items: baseline; font-size: 13px; }
+.sg-w { grid-column: 3; font-size: 12px; color: var(--ink-soft); }
+.sugg .btn { align-self: flex-start; margin-top: 4px; }
