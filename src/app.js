@@ -152,6 +152,12 @@ function home(params) {
       <p style="margin:0">${lines('לכל מודל **רמת ראיות** בארבע דרגות. טבלת ההתאמה מסומנת כ**הערכה**, לא כתוצאה מבוקרת. שאלת הבקרה שומרת **כמה החלטות השתנו**, וזה המדד של הכלי עצמו.')}</p></div>
   </div>
 
+  <h2 class="section-title">חיבורים בין תחומים</h2>
+  <div class="grid-3">${(k.connections || []).map((c) => `<div class="card conn"><h3>${esc(c.title)}</h3>
+    <span class="label">הכלל</span><p>${rich(c.rule)}</p>
+    <span class="label">התובנה</span><p>${rich('==' + c.insight + '==')}</p>
+    <span class="label">מה עושים</span><p>${rich(c.action)}</p></div>`).join('')}</div>
+
   <h2 class="section-title">מתוך המקורות</h2>
   <div class="grid-2">
     <figure class="card" style="margin:0">
@@ -369,10 +375,13 @@ function logPage() {
     return `${crumbs([['בית', '#/'], ['יומן', null]])}<div class="card empty"><h1 class="page-title">היומן ריק.</h1><p>${lines('אחרי כל אבחון עונים על שאלה אחת: האם המודל שינה החלטה? התשובות נשמרות כאן, במכשיר הזה בלבד.')}</p><a class="press btn btn-main" href="${href('diagnose', { step: 0 })}">להתחיל אבחון</a></div>`;
   }
   const n = (v) => log.filter((e) => e.changed === v).length;
+  const DAY = 864e5;
+  const due = log.filter((e) => !e.changed && Date.now() - new Date(e.date) > 30 * DAY).length;
   const V = { yes: 'שינה החלטה', partial: 'שינה חלקית', no: 'לא שינה' };
   return `${crumbs([['בית', '#/'], ['יומן', null]])}
   <h1 class="page-title">${rich(`המודל שינה החלטה ב-**${n('yes')}** מתוך **${log.length}** אבחונים.`)}</h1>
   <p class="page-sub">${lines(`חלקית: **${n('partial')}**. לא שינה: **${n('no')}**. זה המדד של הכלי עצמו: כלי שלא משנה החלטות הוא טקס.`)}</p>
+  ${due ? `<div class="tone tone-insight" style="margin-bottom:16px"><h3>${due} אבחונים עברו 30 יום בלי תשובה.</h3><p>${lines('זה הזמן לבדוק: האם התוצר שימש להחלטה?')}</p></div>` : ''}
   <div class="stack">${[...log].reverse().map((e) => {
     const r = match(DATA, e.answers);
     const names = r.primary ? r.primary.map((m) => m.name).join(' + ') : '';
@@ -381,7 +390,7 @@ function logPage() {
         <strong>${esc(e.description || r.state?.title || '')}</strong>
         <div class="small muted">${esc(names)}</div>
         ${e.note ? `<div class="small" style="margin-top:4px">${esc(e.note)}</div>` : ''}</div>
-      <span class="verdict ${e.changed || 'no'}">${e.changed ? V[e.changed] : 'טרם נענה'}</span></a>`;
+      <span class="verdict ${e.changed || 'no'}">${e.changed ? V[e.changed] : Date.now() - new Date(e.date) > 30 * DAY ? 'הגיע זמן הבדיקה' : `בדיקה ב-${new Date(+new Date(e.date) + 30 * DAY).toLocaleDateString('he-IL')}`}</span></a>`;
   }).join('')}</div>`;
 }
 
