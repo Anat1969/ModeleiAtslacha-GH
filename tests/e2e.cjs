@@ -45,6 +45,9 @@ async function ready(url) {
     ok(!(await page.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), `${name}: אין כפתורי פיתוח חופשיים בסרגל`);
     ok((await page.locator('h1').first().textContent()).includes('לפי הבעיה'), `${name}: כותרת דף הבית`);
     await pane('stage');
+    ok(await page.locator('.dom').count() === 8 && await page.locator('.unit-sq').count() === 25, `${name}: מפת התחומים: 8 תחומים, 25 מודלים`);
+    ok(await page.locator('.smap .sm-node').count() === 4 || mob, `${name}: מבנה האפליקציה מוסבר בדף הבית`);
+    await page.click('[data-tab="space"]');
     await page.waitForTimeout(900);
     ok(await page.locator('#cube .c-pt').count() === 13, `${name}: מרחב האבחון מציג 13 מצבים`);
     await page.locator('#cube .c-pt').first().dispatchEvent('click');
@@ -52,8 +55,6 @@ async function ready(url) {
     ok((await page.locator('#pick').textContent()).includes('לתוצאה') || (await page.locator('#pick a').count()) === 1, `${name}: לחיצה על נקודה מציגה מצב ומודל`);
     await page.click('[data-tab="drift"]');
     ok(await page.locator('.drift-row').count() >= 7, `${name}: ציר סחף הייחוס`);
-    await page.click('[data-tab="evidence"]');
-    ok(await page.locator('.unit').count() === 16, `${name}: תרשים הראיות מציג 16 מודלים`);
     await page.click('[data-tab="path"]');
     for (const c of ['תקציב פרויקט', 'שיתוף ציבור', 'תכנון שכונה']) {
       await page.click(`[data-case] >> text=${c}`);
@@ -84,9 +85,11 @@ async function ready(url) {
     ok(await page.locator('.mview .glyph').first().isVisible().catch(() => false) || mob, `${name}: שרטוט מוסבר למודל`);
     await noHScroll('תוצאה');
     await pane('models');
-    await page.click('[data-tab="space"]');
-    await page.waitForTimeout(700);
-    ok(await page.locator('#cube .c-focus').count() === 1, `${name}: הבעיה שלך מסומנת במרחב`);
+    await page.click('[data-tab="rel"]');
+    await page.waitForTimeout(300);
+    ok(await page.locator('.rel-dot').count() === 3 && await page.locator('.rel-bar.counter').count() > 0, `${name}: מיקום יחסי: הבעיה שלך מול הראשי והנגדי בשלושה צירים`);
+    await page.click('[data-tab="calc"]');
+    ok((await page.locator('.checks tbody tr td.num').first().textContent()).trim() === '0', `${name}: "איך חושב" ממוספר לפי סדר השאלות`);
     await pane('act');
     await page.click('[data-changed="yes"]');
     await page.fill('#note', 'עברנו מתוכנית אחת לשלושה סבבי שיתוף');
@@ -116,27 +119,40 @@ async function ready(url) {
     ok(true, `${name}: כפתור "לשנות" מחזיר לשאלה`);
     await shot('clarify');
 
-    // ספרייה ובורר ראיות
+    // ספרייה ← תחום ← מודל
     await go('#/library');
-    const all = await page.locator('.lib-card').count();
-    ok(await page.locator('.lib-card .glyph').count() === all, `${name}: שרטוט לכל מודל בספרייה`);
-    await pane('filters');
-    await page.click('[data-ev="untested"]');
-    await page.waitForTimeout(300);
-    const few = await page.locator('.lib-card').count();
-    ok(few > 0 && few < all, `${name}: בורר "לא נבדקה" מסנן (${few} מתוך ${all})`);
-    await pane('filters');
-    await page.click('[data-ev="untested"]');
-    await page.waitForTimeout(300);
-    ok(await page.locator('.lib-card').count() === all, `${name}: לחיצה על הבחירה היחידה מחזירה ל"הכול"`);
+    ok(await page.locator('.ccard').count() === 8, `${name}: הספרייה מציגה 8 תחומים`);
     await noHScroll('ספרייה');
     await shot('library');
-
-    // כרטיס מודל עם תיקון ייחוס
-    await go('#/model/maslow');
-    const mt = await page.locator('main').textContent();
-    ok(mt.includes('מקדרמיד') && mt.includes('1960') && mt.includes('תיקון ייחוס'), `${name}: כרטיס מאסלו מציג את מקדרמיד, 1960`);
+    await page.locator('.ccard').first().click();
+    await page.waitForFunction(() => location.hash.startsWith('#/library/priority'));
+    await page.waitForTimeout(300);
+    const cards = await page.locator('.mcard').count();
+    ok(cards === 4 && await page.locator('.mcard .glyph').count() === cards, `${name}: תחום עם 4 מודלים, ושרטוט לכל אחד`);
+    const tops = await page.evaluate(() => [...document.querySelectorAll('.mcard')].map((c) => Math.round(c.querySelector('.mc-ev').getBoundingClientRect().top - c.getBoundingClientRect().top)));
+    ok(new Set(tops).size === 1, `${name}: רמת הראיות באותו מקום בכל כרטיס (${tops.join(',')})`);
+    ok((await page.locator('.crumbs').first().textContent()).includes('ספרייה'), `${name}: פירורי לחם היררכיים`);
+    await shot('category');
+    await page.locator('.mcard').first().click();
+    await page.waitForFunction(() => location.hash.split('/').length === 4);
+    await page.waitForTimeout(400);
+    ok(await page.locator('.factbar .fact').count() === 6, `${name}: פס עובדות קבוע בכרטיס המודל`);
+    ok(await page.locator('.zone').count() === 3, `${name}: שלושה אזורים: היכרות, הבנה, יישום`);
+    const order = await page.evaluate(() => [...document.querySelectorAll('.pane-know .sub')].map((h) => h.textContent));
+    ok(order[0] === 'הגדרה' && order[1] === 'תובנה', `${name}: היכרות נפתחת בהגדרה ובתובנה`);
+    await pane('understand');
+    await page.click('[data-step="1"]');
+    ok((await page.locator('.demo-pos').textContent()).startsWith('2/'), `${name}: הדגמה עוברת לשלב הבא`);
+    await pane('apply');
+    ok(await page.evaluate(() => { const p = document.querySelector('.pane-apply'); return p.lastElementChild.classList.contains('sources-d'); }), `${name}: המקורות אחרונים`);
     await shot('model');
+
+    // ייחוס שגוי, וכתובת ישנה שמפנה למקום החדש
+    await go('#/model/maslow');
+    await page.waitForFunction(() => location.hash.startsWith('#/library/learning/maslow'));
+    await page.waitForTimeout(300);
+    const mt = await page.locator('main').textContent();
+    ok(mt.includes('מקדרמיד') && mt.includes('1960') && mt.includes('הייחוס והתרשים'), `${name}: כרטיס מאסלו מציג את מקדרמיד, 1960`);
 
     // יומן
     await go('#/log');
