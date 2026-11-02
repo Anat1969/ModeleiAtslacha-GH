@@ -34,6 +34,8 @@ async function ready(url) {
     await page.route('**/appofapp-gh.vercel.app/**', (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body: MENU }));
     const go = async (hash) => { await page.goto(BASE + hash, { waitUntil: 'networkidle' }); await page.waitForTimeout(500); };
     const shot = (n) => page.screenshot({ path: path.join(SHOTS, `${name}-${n}.png`) });
+    const mob = name === 'mob';
+    const pane = async (id) => { if (mob) { await page.click(`[data-pane="${id}"]`); await page.waitForTimeout(250); } };
     const noHScroll = async (where) => ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${name} ${where}: אין גלילה אופקית`);
 
     // דף בית
@@ -42,11 +44,23 @@ async function ready(url) {
     ok(await page.locator('ai-menu .logo').isVisible().catch(() => false) || await page.evaluate(() => !!document.querySelector('ai-menu')?.shadowRoot?.querySelector('.logo')), `${name}: כפתור הלוגו A&I בסרגל`);
     ok(!(await page.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), `${name}: אין כפתורי פיתוח חופשיים בסרגל`);
     ok((await page.locator('h1').first().textContent()).includes('לפי הבעיה'), `${name}: כותרת דף הבית`);
+    await pane('stage');
+    await page.waitForTimeout(900);
+    ok(await page.locator('#cube .c-pt').count() === 13, `${name}: מרחב האבחון מציג 13 מצבים`);
+    await page.locator('#cube .c-pt').first().dispatchEvent('click');
+    await page.waitForTimeout(200);
+    ok((await page.locator('#pick').textContent()).includes('לתוצאה') || (await page.locator('#pick a').count()) === 1, `${name}: לחיצה על נקודה מציגה מצב ומודל`);
+    await page.click('[data-tab="drift"]');
+    ok(await page.locator('.drift-row').count() >= 7, `${name}: ציר סחף הייחוס`);
+    await page.click('[data-tab="evidence"]');
+    ok(await page.locator('.unit').count() === 16, `${name}: תרשים הראיות מציג 16 מודלים`);
+    await page.click('[data-tab="path"]');
     for (const c of ['תקציב פרויקט', 'שיתוף ציבור', 'תכנון שכונה']) {
       await page.click(`[data-case] >> text=${c}`);
       await page.waitForTimeout(200);
     }
     ok((await page.locator('#keymap svg').getAttribute('aria-label')).includes('בעיות מרושעות'), `${name}: מפת המפתח מציגה את תוצאת תכנון השכונה`);
+    ok(page.url().includes('v=path') && page.url().includes('case=neighborhood'), `${name}: התצוגה נשמרת בכתובת`);
     await noHScroll('בית');
     await page.waitForTimeout(1200);
     await shot('home');
@@ -67,19 +81,26 @@ async function ready(url) {
     const body1 = await page.locator('main').textContent();
     ok(body1.includes('אין כאן פתרון') && body1.includes('בעיות מרושעות') && body1.includes('סולם ההשתתפות'), `${name}: תכנון שכונה -> מסגור, ריטל-וובר וארנשטיין`);
     ok(body1.includes('תווית אזהרה') && body1.includes('שלושה צעדי יישום') && body1.includes('האם המודל שינה החלטה'), `${name}: אזהרה, צעדים ושאלת בקרה`);
+    ok(await page.locator('.mview .glyph').first().isVisible().catch(() => false) || mob, `${name}: שרטוט מוסבר למודל`);
     await noHScroll('תוצאה');
+    await pane('models');
+    await page.click('[data-tab="space"]');
+    await page.waitForTimeout(700);
+    ok(await page.locator('#cube .c-focus').count() === 1, `${name}: הבעיה שלך מסומנת במרחב`);
+    await pane('act');
     await page.click('[data-changed="yes"]');
     await page.fill('#note', 'עברנו מתוכנית אחת לשלושה סבבי שיתוף');
     await page.waitForTimeout(300);
     ok(await page.locator('.saved.show').count() > 0, `${name}: חיווי "נשמר"`);
     await shot('result-wicked');
     await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(300);
     ok(await page.locator('[data-changed="yes"][aria-pressed="true"]').count() === 1 && (await page.inputValue('#note')).includes('שלושה סבבי'), `${name}: התשובה נשמרה אחרי רענון`);
 
     // מקרה 2: תקציב פרויקט
     await go('#/result?intent=budget&cynefin=complicated&agreement=yes&layer=structure&unit=org&data=yes');
     ok((await page.locator('main').textContent()).includes('תחזית לפי מחלקת ייחוס'), `${name}: תקציב פרויקט -> מחלקת ייחוס`);
-    ok((await page.locator('.fit .num').textContent()).includes('100'), `${name}: אחוז התאמה מוצג`);
+    ok((await page.locator('.fit-n').textContent()).includes('100'), `${name}: אחוז התאמה מוצג`);
     await shot('result-budget');
 
     // מקרה 3: שיתוף ציבור
@@ -98,10 +119,13 @@ async function ready(url) {
     // ספרייה ובורר ראיות
     await go('#/library');
     const all = await page.locator('.lib-card').count();
+    ok(await page.locator('.lib-card .glyph').count() === all, `${name}: שרטוט לכל מודל בספרייה`);
+    await pane('filters');
     await page.click('[data-ev="untested"]');
     await page.waitForTimeout(300);
     const few = await page.locator('.lib-card').count();
     ok(few > 0 && few < all, `${name}: בורר "לא נבדקה" מסנן (${few} מתוך ${all})`);
+    await pane('filters');
     await page.click('[data-ev="untested"]');
     await page.waitForTimeout(300);
     ok(await page.locator('.lib-card').count() === all, `${name}: לחיצה על הבחירה היחידה מחזירה ל"הכול"`);
