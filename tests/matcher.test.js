@@ -166,3 +166,7 @@ test('הצלבה מול הדוח: SWOT מסטנפורד, מחלקת ייחוס �
   assert.match(findModel(data, 'swot').evidenceNote, /20/);
   assert.equal(data.knowledge.connections.length, 3);
 });
+
+test('לכל מצב תשובות לדוגמה שמובילות אליו', () => {
+  for (const st of data.states) assert.equal(match(data, st.sample).state.id, st.id, st.id);
+});

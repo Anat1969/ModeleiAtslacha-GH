@@ -8,6 +8,9 @@
     "test": "node --test tests/matcher.test.js",
     "serve": "python3 -m http.server 4173",
     "e2e": "node tests/e2e.cjs",
-    "check": "npm test && npm run e2e"
+    "check": "npm test && npm run e2e",
+    "fit": "node tests/fit.cjs http://localhost:4173/ /tmp/fit / /diagnose?step=0 /library /model/swot /log",
+    "overlap": "node tests/overlap.cjs http://localhost:4173/ / /library /model/kano",
+    "glyphs": "node tests/glyph-overlap.cjs"
   }
 }

@@ -21,7 +21,8 @@
         "label": "לא נבדקה",
         "hint": "מסגרת מושגית. לא נמצאה בדיקה אמפירית שלה."
       }
-    }
+    },
+    "driftTitle": "התרשים המוכר נולד אחרי הרעיון, לפעמים בעשרות שנים."
   },
   "intents": [
     {
@@ -431,7 +432,15 @@
         "לסמן לכל משימה: מה קורה אם היא לא תיעשה בכלל? זה מבחן החשיבות.",
         "לקבוע זמן קבוע ביומן לרבע \"חשוב ולא דחוף\" לפני כל דבר אחר."
       ],
-      "example": "אדריכלית במחלקת ההנדסה בעיריית **אשדוד** Ashdod, עם 40 בקשות פתוחות בשבוע."
+      "example": "אדריכלית במחלקת ההנדסה בעיריית **אשדוד** Ashdod, עם 40 בקשות פתוחות בשבוע.",
+      "sample": {
+        "intent": "tasks",
+        "cynefin": "clear",
+        "agreement": "yes",
+        "layer": "stuff",
+        "unit": "person",
+        "data": "yes"
+      }
     },
     {
       "id": "raci",
@@ -472,7 +481,15 @@
         "לכל שלב: אחראי ביצוע אחד בלבד, ומאשר אחד בלבד.",
         "להציג את הטבלה לכל המשתתפים ולבקש מכל אחד לסמן איפה הוא לא מסכים."
       ],
-      "example": "מסלול היתר בנייה בין מחלקת הרישוי, התנועה והאיכות הסביבה."
+      "example": "מסלול היתר בנייה בין מחלקת הרישוי, התנועה והאיכות הסביבה.",
+      "sample": {
+        "intent": "roles",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "services",
+        "unit": "org",
+        "data": "partial"
+      }
     },
     {
       "id": "swot",
@@ -514,7 +531,15 @@
         "עד 5 פריטים בכל רבע, וכל פריט עם ראיה אחת לפחות.",
         "לחבר כל חוזקה להזדמנות וכל חולשה לאיום, ולגזור מזה 2 עד 3 פעולות."
       ],
-      "example": "האם להקים מרכז קהילתי חדש ברובע ט״ו, או לחדש את הקיים."
+      "example": "האם להקים מרכז קהילתי חדש ברובע ט״ו, או לחדש את הקיים.",
+      "sample": {
+        "intent": "strategy",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "structure",
+        "unit": "org",
+        "data": "yes"
+      }
     },
     {
       "id": "five-forces",
@@ -556,7 +581,15 @@
         "לכל אחד מחמשת הכוחות: מספר אחד שמודד אותו, לא רק תיאור.",
         "לשאול מה מבדיל אתכם מהמתחרים באותו ענף, כי שם רוב השונות."
       ],
-      "example": "מתחמי עבודה משותפים בנמל **אשדוד** Ashdod, מול **תל אביב** Tel Aviv ו**באר שבע** Be'er Sheva."
+      "example": "מתחמי עבודה משותפים בנמל **אשדוד** Ashdod, מול **תל אביב** Tel Aviv ו**באר שבע** Be'er Sheva.",
+      "sample": {
+        "intent": "market",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "skin",
+        "unit": "org",
+        "data": "yes"
+      }
     },
     {
       "id": "jtbd-kano",
@@ -602,7 +635,15 @@
         "לנסח 3 עד 5 \"עבודות\" בפורמט: כאשר אני... אני רוצה... כדי ש...",
         "לבנות שאלון קאנו על התכונות המוצעות ולחזור עליו אחרי שנה, כי הסיווג משתנה."
       ],
-      "example": "תכנון מחדש של כיכר העירייה ב**אשדוד** Ashdod: מה עושים בה בשבת בבוקר ומה בערב."
+      "example": "תכנון מחדש של כיכר העירייה ב**אשדוד** Ashdod: מה עושים בה בשבת בבוקר ומה בערב.",
+      "sample": {
+        "intent": "users",
+        "cynefin": "complex",
+        "agreement": "partial",
+        "layer": "space",
+        "unit": "public",
+        "data": "partial"
+      }
     },
     {
       "id": "okr",
@@ -645,7 +686,15 @@
         "2 עד 4 תוצאות מפתח, וכל אחת מודדת שינוי אצל מישהו, לא כמות עבודה.",
         "לכל תוצאה לשאול: איך אפשר להשיג את המספר ולפספס את המטרה? ולתקן."
       ],
-      "example": "צוות התחדשות עירונית: \"תושבים מבינים את התוכנית לפני ההצבעה\", ולא \"10 כנסים\"."
+      "example": "צוות התחדשות עירונית: \"תושבים מבינים את התוכנית לפני ההצבעה\", ולא \"10 כנסים\".",
+      "sample": {
+        "intent": "goals",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "space",
+        "unit": "team",
+        "data": "yes"
+      }
     },
     {
       "id": "reference-class",
@@ -700,7 +749,15 @@
           },
           "note": "אין נתונים על מקרים דומים. השלב הראשון הוא לבנות מחלקת ייחוס, גם מפרסומים של ערים אחרות."
         }
-      ]
+      ],
+      "sample": {
+        "intent": "budget",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "structure",
+        "unit": "org",
+        "data": "yes"
+      }
     },
     {
       "id": "wicked",
@@ -745,7 +802,15 @@
         "לקבוע במשותף מתי סבב נגמר ומה ייחשב שיפור, כי אין נקודת סיום טבעית.",
         "לבחור את דרגת ההשתתפות בסולם של ארנשטיין במפורש, ולומר אותה לציבור מראש."
       ],
-      "example": "התחדשות עירונית ברובע א׳ ב**אשדוד** Ashdod: דיירים, יזמים, העירייה ושכנים, וכל אחד רואה בעיה אחרת."
+      "example": "התחדשות עירונית ברובע א׳ ב**אשדוד** Ashdod: דיירים, יזמים, העירייה ושכנים, וכל אחד רואה בעיה אחרת.",
+      "sample": {
+        "intent": "conflict",
+        "cynefin": "complex",
+        "agreement": "no",
+        "layer": "site",
+        "unit": "public",
+        "data": "partial"
+      }
     },
     {
       "id": "cynefin-probes",
@@ -800,7 +865,15 @@
           "to": "reference-class",
           "note": "בשכבת אתר או מבנה אין ניסוי בטוח לכישלון: מה שנבנה נשאר. לכן מתחילים ממבט מבחוץ על מקרים דומים."
         }
-      ]
+      ],
+      "sample": {
+        "intent": "uncertainty",
+        "cynefin": "complex",
+        "agreement": "partial",
+        "layer": "stuff",
+        "unit": "team",
+        "data": "none"
+      }
     },
     {
       "id": "bloom",
@@ -839,7 +912,15 @@
         "למקם כל תוצר בטבלה הדו-ממדית: סוג הידע מול התהליך הקוגניטיבי.",
         "לתכנן משימה שמתרגלת יצירה כבר בשבוע הראשון, ולא רק אחרי זכירה והבנה."
       ],
-      "example": "סטודיו לתכנון עירוני שמתחיל בסקר שטח ברובע הסיטי ב**אשדוד** Ashdod, ולא בהרצאה."
+      "example": "סטודיו לתכנון עירוני שמתחיל בסקר שטח ברובע הסיטי ב**אשדוד** Ashdod, ולא בהרצאה.",
+      "sample": {
+        "intent": "learning",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "stuff",
+        "unit": "team",
+        "data": "partial"
+      }
     },
     {
       "id": "kamiya",
@@ -876,7 +957,15 @@
         "להפריד בין מקור המשמעות לבין מקור הפרנסה, ולא לדרוש מכיוון אחד את שניהם.",
         "לבחור צעד קטן אחד לחודש הקרוב שמגדיל את הרגעים האלה."
       ],
-      "example": "מתכננת עירונית ששוקלת מעבר מרישוי לתכנון אסטרטגי."
+      "example": "מתכננת עירונית ששוקלת מעבר מרישוי לתכנון אסטרטגי.",
+      "sample": {
+        "intent": "direction",
+        "cynefin": "complex",
+        "agreement": "partial",
+        "layer": "site",
+        "unit": "person",
+        "data": "none"
+      }
     },
     {
       "id": "pareto",
@@ -930,7 +1019,15 @@
           },
           "note": "אין נתונים. לפני ניתוח פארטו אוספים פניות לפחות חודש, בסיווג קבוע."
         }
-      ]
+      ],
+      "sample": {
+        "intent": "complaints",
+        "cynefin": "complicated",
+        "agreement": "yes",
+        "layer": "services",
+        "unit": "org",
+        "data": "yes"
+      }
     },
     {
       "id": "chaos",
@@ -957,7 +1054,15 @@
         "לבדוק מה השתנה אחרי הפעולה, ולתעד בזמן אמת.",
         "כשהמצב יציב, לחזור לשאלה הראשונה ולאבחן מחדש."
       ],
-      "example": "הצפה ברחובות אחרי סערה: קודם ניקוז ופינוי, ורק אחר כך תוכנית ניהול מי נגר."
+      "example": "הצפה ברחובות אחרי סערה: קודם ניקוז ופינוי, ורק אחר כך תוכנית ניהול מי נגר.",
+      "sample": {
+        "intent": "uncertainty",
+        "cynefin": "chaotic",
+        "agreement": "partial",
+        "layer": "services",
+        "unit": "org",
+        "data": "none"
+      }
     }
   ],
   "models": [
@@ -996,6 +1101,17 @@
           "text": "Zhu, M., Yang, Y., & Hsee, C. K. (2018). The mere urgency effect. Journal of Consumer Research, 45(3), 673–690.",
           "url": "https://doi.org/10.1093/jcr/ucy008"
         }
+      ],
+      "short": "אייזנהאואר",
+      "drift": [
+        {
+          "year": 1954,
+          "label": "נאום: \"דילמה של האדם המודרני\""
+        },
+        {
+          "year": 1989,
+          "label": "קובי: מטריצה"
+        }
       ]
     },
     {
@@ -1026,7 +1142,8 @@
         {
           "text": "לא נבדק במקורות ראשוניים. ממתין לבדיקה ולהוספה לרשימת המחקר."
         }
-      ]
+      ],
+      "short": "RACI"
     },
     {
       "id": "swot",
@@ -1059,6 +1176,17 @@
         },
         {
           "text": "Hill, T., & Westbrook, R. (1997). SWOT analysis: It's time for a product recall. Long Range Planning, 30(1), 46–52."
+        }
+      ],
+      "short": "SWOT",
+      "drift": [
+        {
+          "year": 1965,
+          "label": "סטיוארט: SOFT השתתפותי"
+        },
+        {
+          "year": 2005,
+          "label": "ייחוס להאמפרי"
         }
       ]
     },
@@ -1097,7 +1225,8 @@
         {
           "text": "McGahan, A. M., & Porter, M. E. (1997). How much does industry matter, really? Strategic Management Journal, 18(S1), 15–30."
         }
-      ]
+      ],
+      "short": "חמשת הכוחות"
     },
     {
       "id": "jtbd",
@@ -1130,6 +1259,17 @@
         },
         {
           "text": "Christensen, C. M., Hall, T., Dillon, K., & Duncan, D. S. (2016). Know your customers' \"jobs to be done\". Harvard Business Review, 94(9), 54–62."
+        }
+      ],
+      "short": "JTBD",
+      "drift": [
+        {
+          "year": 1942,
+          "label": "מודעת ביטוח: המקדחה"
+        },
+        {
+          "year": 1969,
+          "label": "ייחוס ללוויט"
         }
       ]
     },
@@ -1164,7 +1304,8 @@
         {
           "text": "Kano, N. (2001). Life cycle and creation of attractive quality. Proceedings of the 4th QMOD Conference, Linköping."
         }
-      ]
+      ],
+      "short": "קאנו"
     },
     {
       "id": "okr",
@@ -1205,7 +1346,8 @@
         {
           "text": "Doerr, J. (2018). Measure What Matters. Portfolio."
         }
-      ]
+      ],
+      "short": "OKR"
     },
     {
       "id": "reference-class",
@@ -1246,7 +1388,8 @@
         {
           "text": "Kahneman, D. (2011). Thinking, Fast and Slow. Farrar, Straus and Giroux."
         }
-      ]
+      ],
+      "short": "מחלקת ייחוס"
     },
     {
       "id": "rittel-webber",
@@ -1282,7 +1425,8 @@
           "text": "Rittel, H. W. J., & Webber, M. M. (1973). Dilemmas in a general theory of planning. Policy Sciences, 4(2), 155–169.",
           "url": "https://doi.org/10.1007/BF01405730"
         }
-      ]
+      ],
+      "short": "ריטל-וובר"
     },
     {
       "id": "arnstein",
@@ -1313,7 +1457,8 @@
           "text": "Arnstein, S. R. (1969). A ladder of citizen participation. Journal of the American Institute of Planners, 35(4), 216–224.",
           "url": "https://doi.org/10.1080/01944366908977225"
         }
-      ]
+      ],
+      "short": "ארנשטיין"
     },
     {
       "id": "cynefin",
@@ -1351,7 +1496,8 @@
         {
           "text": "Snowden, D. J., & Boone, M. E. (2007). A leader's framework for decision making. Harvard Business Review, 85(11), 68–76."
         }
-      ]
+      ],
+      "short": "Cynefin"
     },
     {
       "id": "bloom-revised",
@@ -1391,6 +1537,17 @@
         {
           "text": "Anderson, L. W., & Sosniak, L. A. (Eds.). (1994). Bloom's Taxonomy: A Forty-Year Retrospective. NSSE Yearbook, 93(2). University of Chicago Press."
         }
+      ],
+      "short": "בלום",
+      "drift": [
+        {
+          "year": 1956,
+          "label": "בלום: טקסונומיה"
+        },
+        {
+          "year": 1972,
+          "label": "ג׳ורג׳יה: משולש"
+        }
       ]
     },
     {
@@ -1425,6 +1582,17 @@
         {
           "text": "Sone, T., et al. (2008). Sense of life worth living (ikigai) and mortality in Japan: Ohsaki Study. Psychosomatic Medicine, 70(6), 709–715.",
           "url": "https://doi.org/10.1097/PSY.0b013e31817e7e64"
+        }
+      ],
+      "short": "קמיה",
+      "drift": [
+        {
+          "year": 1966,
+          "label": "קמיה: משמעות החיים"
+        },
+        {
+          "year": 2014,
+          "label": "וין: ון של קריירה"
         }
       ]
     },
@@ -1461,6 +1629,17 @@
         },
         {
           "text": "Juran, J. M. (1974/1975). The non-Pareto principle; mea culpa. Quality Progress, 8(5). הדוח מתארך 1974, כמו גרסת מכון ג׳וראן; הפרסום בכתב העת: 1975."
+        }
+      ],
+      "short": "פארטו",
+      "drift": [
+        {
+          "year": 1896,
+          "label": "פארטו: אי-שוויון בעושר"
+        },
+        {
+          "year": 1951,
+          "label": "ג׳וראן: \"עיקרון פארטו\""
         }
       ]
     },
@@ -1500,7 +1679,8 @@
         {
           "text": "Brand, S. (1994). How Buildings Learn: What Happens After They're Built. Viking."
         }
-      ]
+      ],
+      "short": "שכבות הגזירה"
     },
     {
       "id": "maslow",
@@ -1541,6 +1721,17 @@
         },
         {
           "text": "Tay, L., & Diener, E. (2011). Needs and subjective well-being around the world. Journal of Personality and Social Psychology, 101(2), 354–365."
+        }
+      ],
+      "short": "מאסלו",
+      "drift": [
+        {
+          "year": 1943,
+          "label": "מאסלו: היררכיה גמישה"
+        },
+        {
+          "year": 1960,
+          "label": "מקדרמיד: פירמידה"
         }
       ]
     }
