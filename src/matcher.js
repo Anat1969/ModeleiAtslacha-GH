@@ -100,3 +100,33 @@ export function titleOf(data, key) {
   if (key === 'intent') return 'מה המשימה';
   return data.questions.find((x) => x.id === key)?.title ?? key;
 }
+
+// ---------- הצעת אבחון מתוך תיאור חופשי ----------
+// מנוע מקומי ושקוף: לכל תשובה רשימת מילים בקובץ הנתונים (lexicon). מחזיר הצעה וגם את המילים שהובילו אליה.
+// התאמה בעברית לפי סעיף 2.8 בסקיל העיצוב: בתחילת מילה, אחרי אותיות שימוש. מונח קצר (עד 3 אותיות) רק כמילה שלמה.
+const PREFIX = /^[הובכלמש]{1,2}/;
+const norm = (s) => String(s || '').replace(/[״"׳'`]/g, '').replace(/[^֐-׿a-zA-Z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+function termHits(text, term) {
+  const t = norm(term);
+  if (t.includes(' ')) return ` ${text} `.includes(` ${t}`) || ` ${text} `.includes(t) ? 1 : 0; // ביטוי של כמה מילים
+  const words = text.split(' ');
+  return words.filter((w) => {
+    const forms = [w, w.replace(PREFIX, ''), w.slice(1)];
+    return forms.some((f) => (t.length <= 3 ? f === t : f.startsWith(t)));
+  }).length;
+}
+export function suggest(data, description) {
+  const text = norm(description);
+  const answers = {}, hits = {};
+  if (!text || !data.lexicon) return { answers, hits };
+  for (const [key, values] of Object.entries(data.lexicon)) {
+    let best = null, bestScore = 0, tie = false;
+    for (const [value, terms] of Object.entries(values)) {
+      const found = terms.filter((t) => termHits(text, t) > 0);
+      const score = found.length;
+      if (score > bestScore) { best = { value, found }; bestScore = score; tie = false; } else if (score && score === bestScore) tie = true;
+    }
+    if (best && !tie) { answers[key] = best.value; hits[key] = best.found; }
+  }
+  return { answers, hits };
+}
