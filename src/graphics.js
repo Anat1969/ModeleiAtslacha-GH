@@ -12,10 +12,10 @@ export const EV_COLOR = { strong: 'var(--ev-strong)', partial: 'var(--ev-partial
 // ---------- שרטוט מוסבר לכל מודל ----------
 const G = {
   eisenhower: () => `
-    <rect class="g-line" x="30" y="10" width="110" height="80"/><line class="g-line" x1="85" y1="10" x2="85" y2="90"/><line class="g-line" x1="30" y1="50" x2="140" y2="50"/>
-    <rect class="g-mark draw-fill" x="31" y="11" width="53" height="38"/>
-    ${T(57, 33, 'חשוב, לא דחוף', 'g-s g-b')}${T(112, 33, 'עכשיו')}${T(112, 73, 'להאציל?')}${T(57, 73, 'לוותר')}
-    ${T(85, 104, 'דחוף ←', 'g-s')}${T(16, 52, 'חשוב', 'g-s')}`,
+    <rect class="g-line" x="30" y="10" width="120" height="80"/><line class="g-line" x1="90" y1="10" x2="90" y2="90"/><line class="g-line" x1="30" y1="50" x2="150" y2="50"/>
+    <rect class="g-mark draw-fill" x="31" y="11" width="58" height="38"/>
+    ${T(60, 27, 'חשוב', 'g-s g-b')}${T(60, 39, 'לא דחוף', 'g-s g-b')}${T(120, 33, 'עכשיו', 'g-s')}${T(120, 73, 'להאציל', 'g-s')}${T(60, 73, 'לוותר', 'g-s')}
+    ${T(90, 104, 'דחוף ←', 'g-s')}${T(15, 52, 'חשוב', 'g-s')}`,
   raci: () => {
     let b = ''; const cols = ['R', 'A', 'C', 'I'];
     cols.forEach((c, i) => { b += `<text class="g-s" x="${52 + i * 26}" y="16" text-anchor="middle">${c}</text>`; });
@@ -54,8 +54,8 @@ const G = {
   'reference-class': () => {
     const h = [6, 14, 26, 30, 22, 15, 10, 7, 5, 3, 2, 2];
     return h.map((v, i) => `<rect class="g-fill grow-y" style="--d:${i * 40}ms" x="${14 + i * 11}" y="${84 - v * 2}" width="9" height="${v * 2}"/>`).join('') +
-      `<line class="g-arrow" x1="10" y1="84" x2="154" y2="84" marker-end="url(#ah)"/><line class="g-red-l" x1="18" y1="11" x2="18" y2="86"/><line class="g-ink-l" x1="64" y1="18" x2="64" y2="86"/>
-       ${T(40, 7, 'התחזית שלך', 'g-s g-red-t')}${T(80, 100, 'החריגה בפועל', 'g-s')}${T(136, 100, 'זנב', 'g-s')}`;
+      `<line class="g-arrow" x1="10" y1="84" x2="154" y2="84" marker-end="url(#ah)"/><line class="g-red-l" x1="18" y1="16" x2="18" y2="86"/><line class="g-ink-l" x1="64" y1="22" x2="64" y2="86"/>
+       ${T(40, 12, 'התחזית שלך', 'g-s g-red-t')}${T(80, 100, 'החריגה בפועל', 'g-s')}${T(136, 100, 'זנב', 'g-s')}`;
   },
   'rittel-webber': () => {
     let d = '';
@@ -76,11 +76,11 @@ const G = {
     ${T(50, 33, 'מורכבת', 'g-t g-b')}${T(110, 33, 'מסובכת')}${T(50, 75, 'כאוטית')}${T(110, 75, 'ברורה')}
     ${T(80, 106, 'סיבה ותוצאה קובעות את הדרך', 'g-s')}`,
   'bloom-revised': () => {
+    const P = [['לזכור', 'להבין', 'ליישם'], ['לנתח', 'להעריך', 'ליצור']];
     let b = '';
-    for (let i = 0; i <= 6; i++) b += `<line class="g-grid" x1="${20 + i * 20}" y1="10" x2="${20 + i * 20}" y2="86"/>`;
-    for (let j = 0; j <= 4; j++) b += `<line class="g-grid" x1="20" y1="${10 + j * 19}" x2="140" y2="${10 + j * 19}"/>`;
-    [[1, 3], [2, 2], [5, 1], [4, 3], [6, 0], [3, 1]].forEach(([x, y], i) => { b += `<circle class="g-ink pop" style="--d:${i * 80}ms" cx="${10 + x * 20}" cy="${19 + y * 19}" r="5"/>`; });
-    return b + T(80, 102, 'מפה של ידע ותהליך, לא סולם', 'g-s');
+    P.forEach((row, r) => row.forEach((t, i) => { const x = 104 - i * 50, y = 16 + r * 34; b += `<rect class="${t === 'ליצור' ? 'g-ink' : 'g-cell'} pop" style="--d:${(r * 3 + i) * 70}ms" x="${x}" y="${y}" width="46" height="24"/>` + `<text class="${t === 'ליצור' ? 'g-w' : 'g-s'}" x="${x + 23}" y="${y + 16}" direction="rtl" text-anchor="middle" style="font-size:10.5px">${t}</text>`; }));
+    b += `<path class="g-arrow draw" d="M28 50 C 40 64, 64 66, 76 42" marker-end="url(#ah)"/>`;
+    return b + T(80, 100, 'מפה, לא סולם: היצירה מובילה להבנה', 'g-s');
   },
   'ikigai-kamiya': () => `
     ${[[30, 26], [130, 26], [30, 78], [130, 78]].map(([x, y]) => `<circle class="g-cell" cx="${x}" cy="${y}" r="7"/><path class="g-arrow draw" d="M${x + (80 - x) * 0.2} ${y + (52 - y) * 0.2} L${x + (80 - x) * 0.7} ${y + (52 - y) * 0.7}" marker-end="url(#ah)"/>`).join('')}
@@ -101,6 +101,59 @@ const G = {
     <path class="g-line g-faint" d="M30 88 L60 18 L90 88 Z"/><line class="g-red-l" x1="26" y1="92" x2="94" y2="14"/>
     ${[40, 30, 46, 26, 36].map((h, i) => `<rect class="g-fill grow-y" style="--d:${i * 60}ms" x="${104 + i * 10}" y="${88 - h}" width="7" height="${h}"/>`).join('')}
     ${T(60, 104, 'לא סולם', 'g-s g-red-t')}${T(128, 104, 'במקביל', 'g-s')}`,
+  premortem: () => `
+    <line class="g-arrow" x1="150" y1="40" x2="22" y2="40" marker-end="url(#ah)"/>
+    <circle class="g-ink" cx="146" cy="40" r="6"/>${T(146, 26, 'היום', 'g-s')}
+    <text class="g-w" x="16" y="44" text-anchor="middle" style="fill:var(--cut);font-size:15px">✕</text>${T(18, 26, 'כישלון', 'g-s g-red-t')}
+    <path class="g-arrow draw" d="M24 52 C 60 86, 110 86, 140 54" marker-end="url(#ah)"/>
+    ${T(80, 66, 'למה זה נכשל?', 'g-s g-b')}${T(80, 104, 'נוסעים לעתיד וחוזרים עם סיבות', 'g-s')}`,
+  ooda: () => {
+    const N = [['תצפית', 128, 26, 12], ['כיוון', 128, 62, 88], ['החלטה', 34, 62, 86], ['פעולה', 34, 26, 12]];
+    let b = '<path class="g-curve draw" d="M128 36 L128 50 M115 62 L46 62 M34 52 L34 36 M46 26 L116 26" marker-end="url(#ah)"/>';
+    b += '<path class="g-arrow" d="M118 54 L44 32" stroke-dasharray="3 3"/>';
+    N.forEach(([t, x, y, ly], i) => { b += `<circle class="${i === 1 ? 'g-ink' : 'g-cell'}" cx="${x}" cy="${y}" r="${i === 1 ? 12 : 9}"/>` + T(x, ly, t, i === 1 ? 'g-s g-b' : 'g-s'); });
+    return b + T(80, 104, 'הלב הוא הכיוון, עם משוב', 'g-s');
+  },
+  'double-diamond': () => `
+    <path class="g-line draw" d="M8 50 L44 18 L80 50 L44 82 Z"/><path class="g-line draw" style="--d:300ms" d="M80 50 L116 18 L152 50 L116 82 Z"/>
+    <circle class="g-reddot pop" style="--d:700ms" cx="80" cy="50" r="5"/>
+    ${T(30, 54, 'לגלות', 'g-s')}${T(60, 54, 'להגדיר', 'g-s')}${T(100, 54, 'לפתח', 'g-s')}${T(132, 54, 'לספק', 'g-s')}
+    ${T(80, 100, 'הבעיה מוגדרת באמצע', 'g-s g-red-t')}`,
+  'theory-of-change': () => {
+    const B = ['פעילות', 'תפוקה', 'תוצאה', 'השפעה'];
+    let b = '';
+    B.forEach((t, i) => { const x = 136 - i * 40; b += `<rect class="${i === 3 ? 'g-ink' : 'g-cell'} pop" style="--d:${i * 120}ms" x="${x - 16}" y="36" width="32" height="24"/>` + T(x, 74, t, 'g-s'); if (i < 3) b += `<line class="g-arrow" x1="${x - 17}" y1="48" x2="${x - 23}" y2="48" marker-end="url(#ah)"/>` + T(x - 20, 30, 'כי', 'g-s g-red-t'); });
+    return b + T(80, 100, 'לכל חץ הנחה שבודקים', 'g-s');
+  },
+  lewin: () => {
+    let b = '<line class="g-line" x1="80" y1="10" x2="80" y2="88"/>';
+    [20, 40, 60, 80].forEach((y, i) => { b += `<line class="g-green-l draw" style="--d:${i * 80}ms" x1="${146 - i * 6}" y1="${y}" x2="86" y2="${y}" marker-end="url(#ah)"/><line class="g-red-l draw" style="--d:${i * 80}ms" x1="${16 + i * 10}" y1="${y}" x2="74" y2="${y}" marker-end="url(#ah)"/>`; });
+    return b + T(124, 8, 'דוחפים', 'g-s g-green-t') + T(36, 8, 'מעכבים', 'g-s g-red-t') + T(80, 104, 'שדה כוחות, לא שלושה שלבים', 'g-s');
+  },
+  ostrom: () => {
+    let b = '<circle class="g-ring" cx="80" cy="50" r="30"/>';
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, x = 80 + Math.cos(a) * 30, y = 50 + Math.sin(a) * 30; b += `<circle class="g-ink pop" style="--d:${i * 60}ms" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>`; }
+    return b + T(80, 54, 'משאב', 'g-s g-b') + T(80, 102, '8 תנאים, והשומרים על הגבול', 'g-s');
+  },
+  nudge: () => `
+    <circle class="g-ink" cx="146" cy="50" r="6"/>
+    <path class="g-curve draw" d="M140 50 C 110 50, 90 22, 40 22" marker-end="url(#ah)"/>
+    <path class="g-arrow" d="M140 52 C 110 56, 90 80, 40 80" stroke-dasharray="3 3" marker-end="url(#ah)"/>
+    ${T(22, 22, 'ברירת', 'g-s g-b')}${T(22, 36, 'מחדל', 'g-s g-b')}${T(24, 84, 'אפשרי', 'g-s')}
+    ${T(80, 104, 'אין צומת ניטרלי', 'g-s')}`,
+  'leverage-points': () => `
+    <polygon class="g-ink" points="64,74 72,60 80,74"/>
+    <line class="g-curve draw" x1="10" y1="80" x2="150" y2="44"/>
+    <rect class="g-fill" x="4" y="58" width="16" height="16"/>
+    ${[12, 9, 6, 3, 1].map((n, i) => `<text class="g-num" style="font-size:10px" x="${88 + i * 15}" y="${(80 - (88 + i * 15 - 10) * 0.257 - 6).toFixed(1)}" text-anchor="middle">${n}</text>`).join('')}
+    ${T(118, 30, 'פרדיגמה', 'g-s g-b')}${T(30, 96, 'מספרים', 'g-s')}${T(110, 104, 'רחוק יותר, חזק יותר', 'g-s')}`,
+  'five-whys': () => {
+    let b = '';
+    for (let i = 0; i < 5; i++) b += `<circle class="g-ink pop" style="--d:${i * 90}ms" cx="128" cy="${12 + i * 18}" r="6"/>` + (i < 4 ? `<line class="g-line" x1="128" y1="${18 + i * 18}" x2="128" y2="${24 + i * 18}"/>` : '');
+    b += '<g class="g-faint-tree"><circle class="g-cell" cx="50" cy="12" r="5"/>' + [[30, 34], [50, 34], [70, 34], [22, 58], [38, 58], [62, 58], [78, 58], [30, 82], [70, 82]].map(([x, y]) => `<circle class="g-cell" cx="${x}" cy="${y}" r="5"/>`).join('') +
+      '<path class="g-grid" d="M50 17 L30 29 M50 17 L50 29 M50 17 L70 29 M30 39 L22 53 M30 39 L38 53 M70 39 L62 53 M70 39 L78 53 M38 63 L30 77 M62 63 L70 77"/></g>';
+    return b + T(128, 104, 'שרשרת', 'g-s g-b') + T(50, 104, 'המציאות: עץ', 'g-s');
+  },
 };
 
 const DEFS = '<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>';
@@ -181,7 +234,7 @@ export class DiagnosisCube {
     this.host = host; this.data = data; this.onPick = onPick; this.focus = focus;
     const q = (id) => data.questions.find((x) => x.id === id).options.map((o) => o.id);
     this.ax = { x: q('cynefin'), y: q('agreement').slice().reverse(), z: q('layer') };
-    this.theta = -0.62; this.auto = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.theta = -0.62; this.auto = false; // בלי סיבוב אוטומטי: תנועה מקשה לקרוא צירים. גרירה מסובבת.
     this.points = data.states.map((s) => ({ s, p: this.coord(s.sample), lead: data.models.find((m) => m.id === s.primary[0]) }));
     if (focus) this.focusPt = this.coord(focus);
     this.build();
@@ -276,7 +329,8 @@ export class DiagnosisCube {
       pt.el.sh.setAttribute('cx', fx); pt.el.sh.setAttribute('cy', fy);
     });
     // טקסט לא עולה על טקסט: תווית שמתנגשת בתווית קרובה יותר לצופה מוסתרת, ומופיעה בריחוף.
-    const placed = [];
+    // תוויות הצירים קודמות: תווית נקודה לא עולה עליהן
+    const placed = [...this.g.ticks, ...this.g.xticks, ...this.g.yticks, ...this.g.axisText].map((t) => { try { const b = t.getBBox(); return [b.x - 2, b.y - 2, b.x + b.width + 2, b.y + b.height + 2]; } catch { return [0, 0, 0, 0]; } });
     [...order].reverse().forEach(({ pt }) => {
       const x = +pt.el.lab.getAttribute('x'), y = +pt.el.lab.getAttribute('y'), w = pt.el.lab.textContent.length * 6.6;
       const box = [x - w, y - 11, x, y + 3];

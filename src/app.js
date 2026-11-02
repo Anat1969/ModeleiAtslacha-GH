@@ -1,7 +1,8 @@
 // מתאם מודלים: ממשק. כל הטקסט התוכני מגיע מ-data/models.json, וההתאמה מ-matcher.js.
 // כל דף הוא קומפוזיציה בגובה המסך: מוקד גרפי אחד, וטורי צד. בנייד: לשוניות במקום גלילה.
 import { match, findModel, labelOf, titleOf, QUESTION_KEYS } from './matcher.js';
-import { glyph, driftChart, evidenceChart, optionGlyph, DiagnosisCube, EV_COLOR } from './graphics.js';
+import { glyph, driftChart, optionGlyph, DiagnosisCube, EV_COLOR } from './graphics.js';
+let demoTimer = null;
 
 const LOG_KEY = 'matcher.log.v1';
 const DRAFT_KEY = 'matcher.draft.v1';
@@ -109,60 +110,98 @@ function keyMap(answers, title) {
   return list + `<svg class="keysvg" viewBox="0 0 ${W} 270" role="img" aria-label="${esc(title || 'מסלול האבחון')}: ${esc(res.join(' + '))}">${svg}</svg>`;
 }
 
+// ---------- רכיבים משותפים להיררכיה ----------
+// כותרת אזור: אותו מספר ואותו שם באותו מקום בכל דף. 1 היכרות, 2 הבנה, 3 יישום.
+const zone = (n, t) => `<div class="zone"><span class="zn num">${n}</span><span>${esc(t)}</span></div>`;
+const EV_SCORE = { strong: 3, partial: 2, anecdotal: 1, untested: 0 };
+const catOf = (id) => DATA.categories.find((c) => c.id === id);
+const modelsIn = (catId) => DATA.models.filter((m) => m.category === catId);
+const modelHref = (m) => href(`library/${m.category}/${m.id}`);
+const catHref = (c) => href(`library/${c.id}`);
+
+// תחומים כסדרות קטנות: עמודה לכל תחום, ריבוע לכל מודל בצבע הראיות שלו
+function domainsChart() {
+  return `<div class="domains">${DATA.categories.map((c, ci) => {
+    const ms = modelsIn(c.id).slice().sort((a, b) => EV_SCORE[b.evidence] - EV_SCORE[a.evidence]);
+    return `<div class="dom" style="--d:${ci * 60}ms">
+      <div class="dom-stack">${ms.map((m, i) => `<a class="unit-sq pop" style="--d:${ci * 60 + i * 50}ms;background:${EV_COLOR[m.evidence]}" href="${modelHref(m)}" title="${esc(m.name)}: ${esc(DATA.meta.evidenceLevels[m.evidence].label)}"><span>${esc(m.short || m.name)}</span></a>`).join('')}</div>
+      <span class="num dom-n">${ms.length}</span>
+      <a class="dom-name" href="${catHref(c)}">${esc(c.name)}</a>
+    </div>`;
+  }).join('')}</div>`;
+}
+function domainsConclusion() {
+  const rows = DATA.categories.map((c) => { const ms = modelsIn(c.id); return { c, n: ms.length, avg: ms.reduce((s, m) => s + EV_SCORE[m.evidence], 0) / ms.length }; });
+  const most = rows.slice().sort((a, b) => b.n - a.n)[0];
+  const weak = rows.slice().sort((a, b) => a.avg - b.avg)[0];
+  const strong = rows.slice().sort((a, b) => b.avg - a.avg)[0];
+  return { most, weak, strong };
+}
+
+// מבנה האפליקציה: מאיפה באתי, איפה אני ולאן ממשיכים
+function structureMap(current) {
+  const node = (id, t, h) => `<a class="sm-node ${current === id ? 'on' : ''}" href="${h}">${esc(t)}</a>`;
+  return `<div class="smap">
+    <div class="sm-row">${node('home', 'בית', '#/')}</div>
+    <div class="sm-branches">
+      <div class="sm-br"><span class="num sm-n">1</span>${node('diagnose', 'אבחון', href('diagnose', { step: 0 }))}<span class="sm-arrow">←</span><span class="sm-leaf">תוצאה</span></div>
+      <div class="sm-br"><span class="num sm-n">2</span>${node('library', 'ספרייה', href('library'))}<span class="sm-arrow">←</span><span class="sm-leaf">תחום</span><span class="sm-arrow">←</span><span class="sm-leaf">מודל</span></div>
+      <div class="sm-br"><span class="num sm-n">3</span>${node('log', 'יומן', href('log'))}</div>
+    </div>
+    <div class="sm-cols" aria-label="מבנה כל דף"><span><b class="num">1</b> היכרות<small>ימין: מה זה</small></span><span><b class="num">2</b> הבנה<small>מרכז: הגרפיקה</small></span><span><b class="num">3</b> יישום<small>שמאל: מה עושים</small></span></div>
+  </div>`;
+}
+
 // ---------- דף הבית ----------
 function home(params) {
   const models = DATA.models, k = DATA.knowledge;
   const wrong = models.filter((m) => m.attributedTo).length;
-  const strong = models.filter((m) => m.evidence === 'strong').length;
   const log = store.get(LOG_KEY, []);
-  const changed = log.filter((e) => e.changed === 'yes').length;
   const caseId = params.case || 'neighborhood';
   const c = CASES.find((x) => x.id === caseId) || CASES[0];
   const conn = k.connections || [];
   const ci = Math.max(0, Math.min(conn.length - 1, Number(params.c) || 0));
   const qm = findModel(DATA, k.quoteModel);
+  const dc = domainsConclusion();
 
-  const intro = `
+  const intro = `${zone(1, 'מה זה')}
     <div class="hero-num rise"><span class="big">${wrong}/${models.length}</span><span class="muted">מודלים מיוחסים לאדם הלא נכון</span></div>
     <h1 class="hero-h rise">בוחרים כלי חשיבה לפי הבעיה, לא לפי הפופולריות.</h1>
-    <p class="lead rise">${lines('חמש שאלות מאבחנות את הבעיה. אחריהן: מודל ראשי, מודל נגדי, אזהרה ושלושה צעדים, עם **המקור האמיתי** ו**רמת הראיות**.')}</p>
-    <div class="row rise"><a class="press btn btn-main" href="${href('diagnose', { step: 0 })}">להתחיל אבחון</a><a class="press btn" href="${href('library')}">ספריית המודלים</a></div>
+    <p class="lead rise">${lines(`חמש שאלות מאבחנות את הבעיה, ומובילות למודל ראשי ולמודל נגדי. ${models.length} מודלים ב-${DATA.categories.length} תחומים, כל אחד עם **המקור האמיתי** ו**רמת הראיות**.`)}</p>
+    <div class="row rise"><a class="press btn btn-main" href="${href('diagnose', { step: 0 })}">להתחיל אבחון</a><a class="press btn" href="${href('library')}">לספרייה</a></div>
     <div class="tri">
       <div class="tone tone-problem"><h4>הבעיה</h4><p>בוחרים מודל כי הוא מוכר.</p></div>
       <div class="tone tone-solution"><h4>הפתרון</h4><p>מאבחנים קודם, ובוחרים אחר כך.</p></div>
       <div class="tone tone-insight"><h4>התובנה</h4><p>${rich(`==${k.insight}==`)}</p></div>
     </div>`;
 
-  const stage = tabs('home', [
-    { id: 'space', label: 'מרחב האבחון', html: `<p class="cap"><strong>12 מצבים מהטבלה, ועוד מצב חירום, על שלושה צירים.</strong> כל נקודה היא כלי אחר. גררו לסיבוב, ולחצו על נקודה.</p><div class="fill cube-host" id="cube"></div><div class="pick" id="pick"><span class="muted">${esc('לחיצה על נקודה מציגה את המצב, המודל והאזהרה.')}</span></div>${legendEv()}` },
-    { id: 'path', label: 'מסלול מקרה', html: `<p class="cap"><strong>שלושה מקרים אמיתיים.</strong> הקו עובר דרך התשובות עד לכלי.</p><div class="chips" role="group" aria-label="בחירת מקרה">${CASES.map((x) => `<button class="chip" data-case="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.label)}</button>`).join('')}</div><div class="fill keymap" id="keymap">${keyMap(c.answers, `מסלול האבחון במקרה ${c.label}`)}</div><div class="legend"><span><i class="lg-path"></i>מסלול האבחון</span><span><i class="lg-on"></i>התשובה שנבחרה</span><span><i class="lg-off"></i>תשובה אפשרית</span><span><i class="lg-res"></i>התוצאה</span></div>` },
+  const stage = zone(2, 'המפה') + tabs('home', [
+    { id: 'domains', label: 'התחומים', html: `<p class="cap"><strong>${esc(dc.most.c.name)}: הכי הרבה מודלים (${dc.most.n}). ${esc(dc.weak.c.name)}: הכי מעט ראיות.</strong> כל ריבוע הוא מודל, בצבע רמת הראיות שלו.</p><div class="fill chart-host">${domainsChart()}</div>${legendEv()}` },
+    { id: 'space', label: 'מרחב האבחון', html: `<ol class="howto"><li><b>רוחב:</b> סוג הבעיה, מברורה לכאוטית.</li><li><b>עומק:</b> הסכמה על הבעיה, מ"כן" ל"לא".</li><li><b>גובה:</b> שכבת זמן. אתר למטה, תכולה למעלה.</li></ol><div class="fill cube-host" id="cube"></div><div class="pick" id="pick"><span class="muted">${esc('לחיצה על נקודה מציגה את המצב, המודל והאזהרה. גרירה מסובבת.')}</span></div>${legendEv()}` },
     { id: 'drift', label: 'הרעיון והתרשים', html: `<p class="cap"><strong>${esc(DATA.meta.driftTitle)}</strong> המספר: כמה שנים עברו.</p><div class="fill chart-host">${driftChart(models)}</div><div class="legend"><span><i style="background:var(--ink)"></i>הרעיון המקורי</span><span><i style="background:var(--cut)"></i>התרשים או הייחוס המוכר</span></div>` },
-    { id: 'evidence', label: 'ראיות', html: `<p class="cap"><strong>רק ${strong} מתוך ${models.length} נשענים על ראיות חזקות.</strong> כל ריבוע הוא מודל, ולחיצה פותחת את הכרטיס.</p><div class="fill chart-host">${evidenceChart(DATA)}</div>` },
+    { id: 'path', label: 'מסלול מקרה', html: `<p class="cap"><strong>שלושה מקרים אמיתיים.</strong> הקו עובר דרך התשובות עד לכלי.</p><div class="chips" role="group" aria-label="בחירת מקרה">${CASES.map((x) => `<button class="chip" data-case="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.label)}</button>`).join('')}</div><div class="fill keymap" id="keymap">${keyMap(c.answers, `מסלול האבחון במקרה ${c.label}`)}</div><div class="legend"><span><i class="lg-path"></i>מסלול האבחון</span><span><i class="lg-on"></i>התשובה שנבחרה</span><span><i class="lg-off"></i>תשובה אפשרית</span><span><i class="lg-res"></i>התוצאה</span></div>` },
   ], params.v);
 
-  const more = `
-    <h2 class="sec">מפת האפליקציה</h2>
-    <a class="dense-link press" href="${href('diagnose', { step: 0 })}"><span>אבחון בחמש שאלות</span><span class="num">5</span></a>
-    <a class="dense-link press" href="${href('library')}"><span>ספריית מודלים</span><span class="num">${models.length}</span></a>
-    <a class="dense-link press" href="${href('log')}"><span>${log.length ? `יומן: שינה החלטה ב-${changed}` : 'יומן החלטות'}</span><span class="num">${log.length}</span></a>
+  const more = `${zone(3, 'לאן ממשיכים')}
+    <h2 class="sec">מבנה האפליקציה</h2>
+    ${structureMap('home')}
+    <p class="src">${esc(log.length ? `ביומן: ${log.length} אבחונים.` : 'היומן ריק עד האבחון הראשון.')}</p>
     <h2 class="sec">חיבורים בין תחומים</h2>
     ${conn.length ? `<div class="card conn">
-      <div class="conn-head"><strong>${esc(conn[ci].title)}</strong><span class="stepper"><button class="icon-btn" data-conn="${(ci - 1 + conn.length) % conn.length}" aria-label="החיבור הקודם">‹</button><span class="num">${ci + 1}/${conn.length}</span><button class="icon-btn" data-conn="${(ci + 1) % conn.length}" aria-label="החיבור הבא">›</button></span></div>
+      <div class="conn-head"><strong>${esc(conn[ci].title)}</strong><span class="stepper"><button class="icon-btn" data-conn="${(ci - 1 + conn.length) % conn.length}" aria-label="החיבור הקודם">›</button><span class="num">${ci + 1}/${conn.length}</span><button class="icon-btn" data-conn="${(ci + 1) % conn.length}" aria-label="החיבור הבא">‹</button></span></div>
       <span class="label">הכלל</span><p>${rich(conn[ci].rule)}</p>
       <span class="label">התובנה</span><p>${rich('==' + conn[ci].insight + '==')}</p>
       <span class="label">מה עושים</span><p>${rich(conn[ci].action)}</p></div>` : ''}
-    <h2 class="sec">מתוך המקורות</h2>
     ${tabs('src', [
-      { id: 'quote', label: 'ציטוט', html: `<blockquote class="quote"><strong>${esc(qm.quote.he)}</strong></blockquote><div class="quote-en">${esc(qm.quote.en)}</div><p class="src">${esc(qm.quote.by)}, Policy Sciences · תרגום</p>` },
       { id: 'haiku', label: 'הייקו', html: `<p class="haiku">${k.haiku.map((l) => `<span class="line">${esc(l)}</span>`).join('')}</p><p class="src">${esc(k.haikuNote)}</p>` },
-      { id: 'anchors', label: 'עוגנים', html: `<p class="small">${lines('**Cynefin** לסוג הבעיה. **ריטל-וובר** להסכמה. **שכבות הגזירה** לזמן. **המבט מבחוץ** לנתונים.')}</p><p class="src">${esc(DATA.meta.tableNotice)}</p>` },
+      { id: 'quote', label: 'ציטוט', html: `<blockquote class="quote"><strong>${esc(qm.quote.he)}</strong></blockquote><div class="quote-en">${esc(qm.quote.en)}</div><p class="src">${esc(qm.quote.by)} · תרגום</p>` },
     ], params.s)}
-    <p class="src foot">${esc(k.inspiration)}</p>`;
+    <p class="src foot">${esc(k.inspiration)}<br>${esc(DATA.meta.tableNotice)}</p>`;
 
   return layout('lay-home', [
-    { id: 'intro', label: 'פתיחה', html: intro },
-    { id: 'stage', label: 'גרפיקה', html: stage },
-    { id: 'more', label: 'עוד', html: more },
+    { id: 'intro', label: '1 מה זה', html: intro },
+    { id: 'stage', label: '2 המפה', html: stage },
+    { id: 'more', label: '3 לאן', html: more },
   ], params);
 }
 
@@ -239,25 +278,51 @@ function diagnose(params) {
 
 // ---------- תוצאה ----------
 function answersRows(answers) {
-  return QUESTION_KEYS.map((k, i) => `<a class="dense-link press" href="${href('diagnose', { ...answers, step: i })}"><span class="label">${esc(titleOf(DATA, k))}</span><span>${esc(labelOf(DATA, k, answers[k]))}</span></a>`).join('');
+  return QUESTION_KEYS.map((k, i) => `<a class="dense-link press" href="${href('diagnose', { ...answers, step: i })}"><span class="num qn">${i}</span><span class="label">${esc(titleOf(DATA, k))}</span><span class="ans">${esc(labelOf(DATA, k, answers[k]))}</span></a>`).join('');
 }
 
 function modelView(m, role, why) {
   const isCounter = role === 'counter';
   return `<div class="mview">
-    <figure class="mfig">${glyph(m)}<figcaption class="src">שרטוט מוסבר, לא התרשים המקורי</figcaption></figure>
+    <figure class="mfig">${glyph(m)}<figcaption class="small">${rich(m.graphicNote)}</figcaption></figure>
     <div class="minfo">
       <span class="role ${isCounter ? 'counter' : ''}">${isCounter ? 'מודל נגדי' : 'מודל ראשי'}</span>
       <h2 class="m-h">${esc(m.name)}</h2><span class="latin">${esc(m.nameEn)}</span>
-      ${isCounter ? `<p class="why">${lines(why)}</p>` : ''}
+      <p class="def">${rich(m.definition)}</p>
+      <p class="ins">${rich('==' + m.insight + '==')}</p>
+      ${isCounter ? `<div class="tone tone-neutral"><h4>למה דווקא הוא</h4><p>${lines(why)}</p></div>` : ''}
       ${row('מקור אמיתי', `<strong>${esc(m.author)}</strong>`)}
       ${row('שנה', yearOf(m))}
       ${row('רמת ראיות', evidence(m.evidence))}
-      ${m.correction ? `<details class="corr"><summary><span class="label">תיקון ייחוס</span> ${m.attributedTo ? `<span class="was">${rich(m.attributedTo)}</span>` : ''}</summary><p class="small">${lines(m.correction)}</p></details>` : ''}
-      <span class="label">הנחת יסוד סמויה</span><p class="small">${lines(m.assumption)}</p>
-      <span class="label">שאלת בקרה של המודל</span><p class="small"><strong>${esc(m.control)}</strong></p>
-      <a class="press btn btn-quiet" href="${href('model/' + m.id)}">כרטיס המקור המלא</a>
+      <a class="press btn btn-quiet" href="${modelHref(m)}">לכרטיס המלא: היכרות, הבנה ויישום</a>
     </div></div>`;
+}
+
+// מיקום יחסי: שלושה צירים מקבילים. על כל ציר: איפה הבעיה שלך, ואיפה מתאים כל מודל.
+function relative(answers, primary, counter) {
+  const axes = [
+    { key: 'cynefin', field: 'problemTypes' },
+    { key: 'agreement', field: 'agreementFit' },
+    { key: 'layer', field: 'layers' },
+  ];
+  const models = [...primary.map((m) => ({ m, kind: 'primary' })), { m: counter, kind: 'counter' }];
+  const gaps = [];
+  const blocks = axes.map((ax) => {
+    const q = DATA.questions.find((x) => x.id === ax.key);
+    const cols = q.options.length;
+    const head = `<div class="rel-row rel-head" style="--cols:${cols}"><span class="rel-lab"></span>${q.options.map((o) => `<span class="rel-col ${answers[ax.key] === o.id ? 'you' : ''}">${esc(o.label)}</span>`).join('')}</div>`;
+    const you = `<div class="rel-row" style="--cols:${cols}"><span class="rel-lab"><b>הבעיה שלך</b></span>${q.options.map((o) => `<span class="rel-cell">${answers[ax.key] === o.id ? '<i class="rel-dot"></i>' : ''}</span>`).join('')}</div>`;
+    const rows = models.map(({ m, kind }) => {
+      const fit = m[ax.field] || [];
+      if (kind === 'primary' && !fit.includes(answers[ax.key])) gaps.push(`${q.title}: ${m.name}`);
+      return `<div class="rel-row" style="--cols:${cols}"><span class="rel-lab">${kind === 'counter' ? 'נגדי: ' : ''}${esc(m.short || m.name)}</span>${q.options.map((o) => `<span class="rel-cell"><i class="rel-bar ${kind} ${fit.includes(o.id) ? 'on' : ''}"></i></span>`).join('')}</div>`;
+    }).join('');
+    return `<div class="rel-axis"><h3 class="rel-t"><span class="num qn">${q.step}</span>${esc(q.title)}</h3>${head}${you}${rows}</div>`;
+  }).join('');
+  const verdict = gaps.length
+    ? `<div class="tone tone-problem"><h4>פער: הבעיה שלך מחוץ לטווח של המודל הראשי</h4><p>${gaps.map((g) => `<span class="line">${esc(g)}</span>`).join('')}</p></div>`
+    : `<div class="tone tone-solution"><h4>בלי פער: הבעיה בתוך הטווח של המודל הראשי בשלושת הצירים</h4><p>המודל הנגדי מראה מה נשאר בחוץ.</p></div>`;
+  return `<p class="cap"><strong>איפה הבעיה שלך, ביחס לכל מודל.</strong> פס כהה: המודל הראשי מתאים. פס מקווקו: המודל הנגדי. נקודה אדומה: התשובה שלך.</p>${verdict}<div class="rel scroll-in">${blocks}</div>`;
 }
 
 function result(params) {
@@ -283,29 +348,29 @@ function result(params) {
       <div class="card"><h2 class="sec">התשובות שנבחרו</h2>${answersRows(answers)}</div></div>`);
   }
 
-  const s = r.state, lead = r.primary[0];
+  const s = r.state;
   const entry = store.get(LOG_KEY, []).find((e) => e.sig === JSON.stringify(answers));
-  const checkRow = (c) => `<tr><td>${esc(titleOf(DATA, c.key))}</td><td><strong>${esc(labelOf(DATA, c.key, c.value))}</strong></td><td>${c.kind === 'requires' ? 'תנאי חובה' : c.kind === 'intent' ? 'משימה' : 'העדפה'}</td><td class="${c.pass ? 'ok-t' : c.kind === 'prefers' ? 'soft-t' : 'no-t'}">${c.pass ? 'מתאים' : c.kind === 'intent' ? 'הוחלפה במסגור' : 'חלקי'}</td></tr>`;
+  const checkRow = (c) => `<tr><td class="num">${QUESTION_KEYS.indexOf(c.key)}</td><td>${esc(titleOf(DATA, c.key))}</td><td><strong>${esc(labelOf(DATA, c.key, c.value))}</strong></td><td>${c.kind === 'requires' ? 'תנאי חובה' : c.kind === 'intent' ? 'משימה' : 'העדפה'}</td><td class="${c.pass ? 'ok-t' : c.kind === 'prefers' ? 'soft-t' : 'no-t'}">${c.pass ? 'מתאים' : c.kind === 'intent' ? 'הוחלפה במסגור' : 'חלקי'}</td></tr>`;
+  const sorted = r.checks.slice().sort((a, b) => QUESTION_KEYS.indexOf(a.key) - QUESTION_KEYS.indexOf(b.key) || (a.kind === 'requires' ? -1 : 1));
 
-  const summary = `${base}
-    <span class="label">מצב מאובחן${s.fromTable === false ? ' · נוסף לטבלה' : ''}</span>
+  const summary = `${zone(1, 'האבחון')}${base}
     <h1 class="page-title">${rich(s.insight)}</h1>
-    <p class="small"><strong>${esc(s.title)}</strong></p>
+    <p class="small"><strong>${esc(s.title)}</strong>${s.fromTable === false ? ' · נוסף לטבלה' : ''}</p>
     <div class="fit-row"><span class="num fit-n">${r.fit}%</span><span class="small muted">התאמה לקריטריונים</span></div>
     ${r.status === 'framing' ? `<div class="tone tone-insight"><h4>אין כאן פתרון. יש תהליך מסגור.</h4><p>${lines('בבעיה מרושעת כל הגדרה היא עמדה. המטרה: סבב שיפור מוסכם.')}</p></div>` : ''}
     ${r.notes.filter((n) => r.status !== 'framing' || !n.includes('אין כאן פתרון')).map((n) => `<div class="tone tone-neutral"><p>${lines(n)}</p></div>`).join('')}
     <div class="tone tone-problem"><h4>תווית אזהרה</h4><p>${lines(s.warning)}</p></div>
-    <h2 class="sec">התשובות שלך</h2>${answersRows(answers)}`;
+    <h2 class="sec">התשובות שלך, לפי סדר השאלות</h2>${answersRows(answers)}`;
 
   const views = [
     ...r.primary.map((m) => ({ id: m.id, label: `ראשי: ${m.short || m.name}`, html: modelView(m, 'primary') })),
     { id: 'counter', label: `נגדי: ${r.counter.model.short || r.counter.model.name}`, html: modelView(r.counter.model, 'counter', r.counter.why) },
-    { id: 'space', label: 'מיקום במרחב', html: `<p class="cap"><strong>הבעיה שלך בין כל המצבים.</strong> הנקודה הגדולה היא הבעיה שלך.</p><div class="fill cube-host" id="cube"></div>${legendEv()}` },
+    { id: 'rel', label: 'מיקום יחסי', html: relative(answers, r.primary, r.counter.model) },
     { id: 'path', label: 'המסלול', html: `<div class="fill keymap">${keyMap(answers, 'המסלול שלך')}</div>` },
-    { id: 'calc', label: 'איך חושב', html: `<div class="scroll-in"><table class="checks"><thead><tr><th>שאלה</th><th>תשובה</th><th>סוג</th><th>תוצאה</th></tr></thead><tbody>${r.checks.map(checkRow).join('')}</tbody></table><p class="src">${lines('אחוז ההתאמה: חלק הקריטריונים שהתקיימו. תנאי חובה שלא מתקיים עוצר את ההמלצה.')}</p><p class="src">${esc(DATA.meta.tableNotice)} ${esc(DATA.meta.sourcesNotice)}</p></div>` },
+    { id: 'calc', label: 'איך חושב', html: `<div class="scroll-in"><p class="cap"><strong>כל שאלה נבדקת מול הקריטריונים של המצב, לפי סדר השאלות.</strong></p><table class="checks"><thead><tr><th>#</th><th>שאלה</th><th>תשובה</th><th>סוג</th><th>תוצאה</th></tr></thead><tbody>${sorted.map(checkRow).join('')}</tbody></table><p class="src">${lines('אחוז ההתאמה: חלק הקריטריונים שהתקיימו. תנאי חובה שלא מתקיים עוצר את ההמלצה.')}</p><p class="src">${esc(DATA.meta.tableNotice)} ${esc(DATA.meta.sourcesNotice)}</p></div>` },
   ];
 
-  const act = `
+  const act = `${zone(3, 'יישום ובקרה')}
     <h2 class="sec">שלושה צעדי יישום</h2>
     <ol class="chain">${s.steps.map((x, i) => `<li style="--d:${i * 120}ms"><span class="chain-n num">${i + 1}</span><span>${rich(x)}</span></li>`).join('')}</ol>
     <div class="city"><span class="label">דוגמה מהעיר</span><p class="small">${rich(s.example)}</p></div>
@@ -321,77 +386,139 @@ function result(params) {
     </div>`;
 
   return layout('lay-result', [
-    { id: 'sum', label: 'אבחון', html: summary },
-    { id: 'models', label: 'מודלים', html: tabs('res', views, params.v) },
-    { id: 'act', label: 'יישום ובקרה', html: act },
+    { id: 'sum', label: '1 האבחון', html: summary },
+    { id: 'models', label: '2 המודלים', html: zone(2, 'המודלים') + tabs('res', views, params.v) },
+    { id: 'act', label: '3 יישום', html: act },
   ], params);
 }
 
-function mountResult() {
-  const host = document.getElementById('cube');
-  if (!host || host.querySelector('svg') || !host.offsetParent) return;
-  const answers = answersFrom(parseRoute().params);
-  new DiagnosisCube(host, DATA, { focus: answers, onPick: (s) => { location.hash = href('result', s.sample); } });
+function mountResult() {}
+
+// ---------- ספרייה: דף ראשי, תחום, מודל ----------
+// כרטיס אחיד: כל פרט באותו מקום בכל כרטיס, בלי קשר לאורך הטקסט.
+function modelCard(m, i = 0) {
+  return `<a class="card press mcard rise" style="animation-delay:${i * 0.03}s" href="${modelHref(m)}">
+    <span class="mc-year num">${m.year || '?'}</span>
+    <div class="mc-g">${glyph(m)}</div>
+    <h3 class="mc-name" title="${esc(m.name)}">${esc(m.name)}</h3>
+    <p class="mc-ins">${esc(m.insight)}</p>
+    <p class="mc-author" title="${esc(m.author)}">${esc(m.author)}</p>
+    <div class="mc-ev">${evidence(m.evidence)}</div>
+    <span class="mc-flag">${m.attributedTo ? 'ייחוס שגוי נפוץ' : m.inMatcher === false ? 'בספרייה, לא בטבלת ההתאמה' : ''}</span>
+  </a>`;
 }
 
-// ---------- ספרייה ----------
-function library(params) {
-  const levels = Object.keys(DATA.meta.evidenceLevels);
-  const sel = levels.includes(params.ev) ? params.ev : null;
-  const shown = DATA.models.filter((m) => !sel || m.evidence === sel);
-  const count = (l) => DATA.models.filter((m) => m.evidence === l).length;
-  const filters = `${crumbs([['בית', '#/'], ['ספרייה', null]])}
-    <h1 class="page-title">כל מודל עם מקורו האמיתי.</h1>
-    <p class="lead">${lines(`**${DATA.models.filter((m) => m.attributedTo).length}** מתוך **${DATA.models.length}** מיוחסים בדרך כלל לאדם אחר.`)}</p>
-    <h2 class="sec">סינון לפי רמת ראיות</h2>
-    <div class="chips vchips" role="group" aria-label="סינון לפי רמת ראיות">
-      <button class="chip" data-ev="" aria-pressed="${!sel}">הכול<span class="num">${DATA.models.length}</span></button>
-      ${levels.map((l) => `<button class="chip" data-ev="${l}" aria-pressed="${sel === l}"><i class="sw" style="background:${EV_COLOR[l]}"></i>${esc(DATA.meta.evidenceLevels[l].label)}<span class="num">${count(l)}</span></button>`).join('')}
-    </div>
-    ${sel ? `<p class="small muted">${esc(DATA.meta.evidenceLevels[sel].hint)}</p>` : ''}
-    <div class="chart-mini">${evidenceChart(DATA)}</div>`;
-  const grid = `<div class="lib-grid scroll-in">${shown.map((m, i) => `<a class="card press lib-card rise" style="animation-delay:${i * 0.03}s" href="${href('model/' + m.id)}">
-      <div class="lib-g">${glyph(m)}</div>
-      <div class="lib-t"><h3>${esc(m.name)}</h3><span class="yr num">${m.year || ''}</span></div>
-      <p class="small"><strong>${esc(m.author)}</strong></p>
-      <div class="lib-f">${evidence(m.evidence)}${m.attributedTo ? '<span class="flag-wrong">ייחוס שגוי נפוץ</span>' : ''}</div>
-    </a>`).join('')}</div>`;
+function libraryHome(params) {
+  const dc = domainsConclusion();
+  const intro = `${zone(1, 'מה יש כאן')}${crumbs([['בית', '#/'], ['ספרייה', null]])}
+    <h1 class="page-title">${DATA.models.length} מודלים, ${DATA.categories.length} תחומי ידע.</h1>
+    <p class="lead">${lines(`בחרי תחום, ואחריו מודל. בכל מודל: **היכרות**, **הבנה** ו**יישום**, ובסוף המקורות.`)}</p>
+    <div class="tone tone-insight"><h4>התובנה</h4><p>${lines(`==${dc.most.c.name}: הכי הרבה מודלים.== הם נולדו מבעיות של עיר ומדיניות, ולא מעסקים.`)}</p></div>
+    <div class="tone tone-problem"><h4>הכי מעט ראיות</h4><p>${lines(`${dc.weak.c.name}. ${dc.weak.c.insight}`)}</p></div>
+    <div class="tone tone-solution"><h4>הכי הרבה ראיות</h4><p>${lines(`${dc.strong.c.name}. ${dc.strong.c.insight}`)}</p></div>
+    ${legendEv()}`;
+  const grid = `${zone(2, 'התחומים')}<div class="cat-grid scroll-in">${DATA.categories.map((c, i) => {
+    const ms = modelsIn(c.id);
+    return `<a class="card press ccard rise" style="animation-delay:${i * 0.04}s" href="${catHref(c)}">
+      <span class="cc-n num">${ms.length}</span>
+      <h3 class="cc-name">${esc(c.name)}</h3>
+      <p class="cc-ins">${rich('==' + c.insight + '==')}</p>
+      <div class="cc-units">${ms.map((m) => `<i style="background:${EV_COLOR[m.evidence]}" title="${esc(m.name)}"></i>`).join('')}</div>
+      <p class="cc-list">${ms.map((m) => esc(m.short || m.name)).join(' · ')}</p>
+    </a>`;
+  }).join('')}</div>`;
   return layout('lay-lib', [
-    { id: 'grid', label: 'מודלים', html: grid },
-    { id: 'filters', label: 'סינון וגרף', html: filters },
+    { id: 'grid', label: '2 התחומים', html: grid },
+    { id: 'intro', label: '1 מה יש כאן', html: intro },
   ], params);
 }
 
-// ---------- כרטיס מודל ----------
-function modelPage(id, params) {
-  const idx = DATA.models.findIndex((x) => x.id === id);
-  const m = DATA.models[idx];
-  if (!m) return `<div class="layout lay-plain"><div class="card empty"><h1 class="page-title">המודל לא נמצא.</h1><p>ייתכן שהקישור ישן.</p><a class="press btn btn-main" href="${href('library')}">לספרייה</a></div></div>`;
-  const prev = DATA.models[(idx - 1 + DATA.models.length) % DATA.models.length], next = DATA.models[(idx + 1) % DATA.models.length];
-  const asPrimary = DATA.states.filter((s) => s.primary.includes(id));
-  const asCounter = DATA.states.filter((s) => s.counter.id === id);
-  const lab = (key, vals) => vals.map((v) => esc(labelOf(DATA, key, v))).join(', ');
-  const card = `${crumbs([['בית', '#/'], ['ספרייה', href('library')], [m.name, null]])}
-    <div class="pager"><a class="icon-btn" href="${href('model/' + prev.id)}" aria-label="הקודם: ${esc(prev.name)}" title="${esc(prev.name)}">›</a><span class="num">${idx + 1}/${DATA.models.length}</span><a class="icon-btn" href="${href('model/' + next.id)}" aria-label="הבא: ${esc(next.name)}" title="${esc(next.name)}">‹</a></div>
-    <h1 class="page-title">${esc(m.name)}</h1><span class="latin">${esc(m.nameEn)}</span>
-    ${row('מקור אמיתי', `<strong>${esc(m.author)}</strong>`)}
-    ${row('', `<span class="latin">${esc(m.authorEn)}</span>`)}
-    ${row('שנה', yearOf(m))}
-    ${row('רמת ראיות', evidence(m.evidence))}
-    ${row('סוג בעיה', lab('cynefin', m.problemTypes))}
-    ${row('שכבת זמן', lab('layer', m.layers))}
-    ${m.correction ? `<div class="tone tone-insight"><h4>תיקון ייחוס</h4><p>${m.attributedTo ? `<span class="was">${rich(m.attributedTo)}</span><br>` : ''}${lines(m.correction)}</p></div>` : ''}`;
-  const views = [
-    { id: 'evidence', label: 'ראיות והקשר', html: `<div class="grid-2"><div><span class="label">הקשר</span><p class="small">${lines(m.context)}</p><span class="label">הנחת יסוד סמויה</span><p class="small">${lines(m.assumption)}</p></div><div><span class="label">מה אומרות הראיות</span><p class="small">${lines(m.evidenceNote)}</p></div></div>` },
-    { id: 'warn', label: 'אזהרות', html: `<div class="grid-2"><div class="tone tone-problem"><h4>תנאים מטעים</h4><p>${lines(m.misleading)}</p></div><div class="tone tone-problem"><h4>שימוש שגוי נפוץ</h4><p>${lines(m.misuse)}</p></div><div class="tone tone-insight"><h4>שאלת בקרה</h4><p>${rich('==' + m.control + '==')}</p></div></div>` },
-    { id: 'sources', label: 'מקורות', html: `<ol class="sources">${m.sources.map((s) => `<li>${esc(s.text)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url.replace('https://', ''))}</a>` : ''}</li>`).join('')}</ol><p class="src">${esc(DATA.meta.sourcesNotice)}</p>${m.quote ? `<blockquote class="quote"><strong>${esc(m.quote.he)}</strong></blockquote><div class="quote-en">${esc(m.quote.en)}</div><p class="src">${esc(m.quote.by)} · תרגום</p>` : ''}` },
-    { id: 'where', label: 'באבחון', html: asPrimary.length || asCounter.length ? `${asPrimary.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">ראשי</span><span>${esc(s.title)}</span></a>`).join('')}${asCounter.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">נגדי</span><span>${esc(s.title)}</span></a>`).join('')}` : `<p class="muted">${m.inMatcher === false ? 'מופיע כמסגרת רקע או כדוגמה לייחוס שגוי, ולא כהמלצה.' : 'לא מופיע באף מצב.'}</p>` },
-  ];
-  const fig = `<figure class="bigfig">${glyph(m)}<figcaption class="src">שרטוט מוסבר: מה המודל אומר, במבט אחד. ${m.drift ? `מהרעיון (${m.drift[0].year}) לתרשים המוכר (${m.drift[1].year}): ${m.drift[1].year - m.drift[0].year} שנים.` : ''}</figcaption></figure>${tabs('model', views, params.v)}`;
-  return layout('lay-model', [
-    { id: 'card', label: 'כרטיס', html: card },
-    { id: 'detail', label: 'שרטוט ופרטים', html: fig },
+function categoryPage(c, params) {
+  const ms = modelsIn(c.id);
+  const levels = Object.keys(DATA.meta.evidenceLevels);
+  const intro = `${zone(1, 'התחום')}${crumbs([['בית', '#/'], ['ספרייה', href('library')], [c.name, null]])}
+    <h1 class="page-title">${esc(c.name)}</h1>
+    <p class="cat-ins">${rich('==' + c.insight + '==')}</p>
+    <p class="small">${lines(c.why)}</p>
+    <h2 class="sec">הראיות בתחום</h2>
+    ${levels.map((l) => { const n = ms.filter((m) => m.evidence === l).length; return `<div class="hbar"><span class="label">${esc(DATA.meta.evidenceLevels[l].label)}</span><span class="hb"><i class="grow-x" style="width:${(100 * n) / ms.length}%;background:${EV_COLOR[l]}"></i></span><span class="num">${n}</span></div>`; }).join('')}
+    <h2 class="sec">תחומים אחרים</h2>
+    <div class="sib">${DATA.categories.filter((x) => x.id !== c.id).map((x) => `<a class="dense-link press" href="${catHref(x)}"><span>${esc(x.name)}</span><span class="num">${modelsIn(x.id).length}</span></a>`).join('')}</div>`;
+  const grid = `${zone(2, 'המודלים בתחום')}<div class="lib-grid scroll-in">${ms.map(modelCard).join('')}</div>`;
+  return layout('lay-lib', [
+    { id: 'grid', label: '2 המודלים', html: grid },
+    { id: 'intro', label: '1 התחום', html: intro },
   ], params);
+}
+
+function modelPage(m, params) {
+  const c = catOf(m.category);
+  const ms = modelsIn(c.id), idx = ms.indexOf(m);
+  const prev = ms[(idx - 1 + ms.length) % ms.length], next = ms[(idx + 1) % ms.length];
+  const lab = (key, vals) => vals.map((v) => esc(labelOf(DATA, key, v))).join(', ');
+  const asPrimary = DATA.states.filter((s) => s.primary.includes(m.id));
+  const asCounter = DATA.states.filter((s) => s.counter.id === m.id);
+  const fact = (label, value, title) => `<div class="fact"><span class="label">${esc(label)}</span><span class="fact-v" title="${esc(title || '')}">${value}</span></div>`;
+
+  // פס עובדות קבוע: אותם שישה פרטים, באותו רוחב ובאותו מקום בכל מודל
+  const facts = `<div class="factbar">
+    ${fact('מקור אמיתי', `<strong>${esc(m.author)}</strong>`, m.author)}
+    ${fact('שנה', yearOf(m))}
+    ${fact('תחום', `<a href="${catHref(c)}">${esc(c.name)}</a>`)}
+    ${fact('רמת ראיות', evidence(m.evidence))}
+    ${fact('סוג בעיה', lab('cynefin', m.problemTypes), lab('cynefin', m.problemTypes))}
+    ${fact('שכבת זמן', lab('layer', m.layers), lab('layer', m.layers))}
+  </div>`;
+
+  const know = `${zone(1, 'היכרות')}
+    <h2 class="sub">הגדרה</h2><p class="def big">${rich(m.definition)}</p>
+    <h2 class="sub">תובנה</h2><p class="ins big">${rich('==' + m.insight + '==')}</p>
+    <h2 class="sub">שיר</h2><p class="haiku">${m.haiku.map((l) => `<span class="line">${esc(l)}</span>`).join('')}</p>
+    <h2 class="sub">מה הביא לגילוי</h2><p class="small">${lines(m.story)}</p>
+    ${m.correction ? `<div class="tone tone-insight"><h4>הייחוס והתרשים</h4><p>${m.attributedTo ? `<span class="was">${rich(m.attributedTo)}</span><br>` : ''}${lines(m.correction)}</p>${m.drift ? `<p class="small"><strong>${m.drift[0].year} ← ${m.drift[1].year}:</strong> ${m.drift[1].year - m.drift[0].year} שנים מהרעיון לתרשים.</p>` : ''}</div>` : ''}`;
+
+  const frames = m.demo.frames;
+  const understand = `${zone(2, 'הבנה')}
+    <figure class="bigfig">${glyph(m)}</figure>
+    <h2 class="sub">מה השרטוט מראה</h2><p class="small">${lines(m.graphicNote)}</p>
+    <h2 class="sub">הדגמה בדרך של המודל: ${esc(m.demo.title)}</h2>
+    <div class="demo" data-demo>
+      <ol class="demo-list">${frames.map((f, i) => `<li class="demo-f ${i === 0 ? 'on' : ''}" data-f="${i}"><span class="num demo-n">${i + 1}</span><span>${rich(f)}</span></li>`).join('')}</ol>
+      <div class="demo-ctl"><button class="icon-btn" data-step="-1" aria-label="השלב הקודם">›</button><span class="num demo-pos">1/${frames.length}</span><button class="icon-btn" data-step="1" aria-label="השלב הבא">‹</button><button class="press btn btn-quiet" data-play>הפעלה</button></div>
+    </div>
+    <h2 class="sub">דוגמאות</h2>
+    <div class="ex-grid">${m.examples.map((e) => `<div class="ex"><span class="label">${esc(e.t)}</span><p class="small">${rich(e.x)}</p></div>`).join('')}</div>`;
+
+  const apply = `${zone(3, 'יישום')}
+    <h2 class="sub">מי יישם</h2>
+    ${m.applied && m.applied.length ? `<ul class="applied">${m.applied.map((a) => `<li><span class="num ap-y">${a.year || ''}</span><span><strong>${esc(a.who)}</strong><br><span class="small">${esc(a.what)}</span></span></li>`).join('')}</ul>` : '<p class="small muted">לא נמצא יישום מתועד במחקר. זה לבדו סימן אזהרה.</p>'}
+    <div class="tone tone-problem"><h4>מתי מטעה</h4><p>${lines(m.misleading)}</p></div>
+    <div class="tone tone-problem"><h4>שימוש שגוי נפוץ</h4><p>${lines(m.misuse)}</p></div>
+    <div class="tone tone-insight"><h4>שאלת בקרה</h4><p>${rich('==' + m.control + '==')}</p></div>
+    <h2 class="sub">מה אומרות הראיות</h2><p class="small">${lines(m.evidenceNote)}</p>
+    <h2 class="sub">באבחון</h2>
+    ${asPrimary.length || asCounter.length ? `${asPrimary.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">ראשי</span><span>${esc(s.title)}</span></a>`).join('')}${asCounter.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">נגדי</span><span>${esc(s.title)}</span></a>`).join('')}` : `<p class="small muted">${m.inMatcher === false ? 'בספרייה בלבד. לפי הדוח, מודל נכנס לטבלה רק אחרי שהוא שינה החלטה אחת לפחות.' : 'לא מופיע באף מצב.'}</p>`}
+    <details class="sources-d"><summary><span class="label">מקורות (${m.sources.length})</span></summary>
+      <ol class="sources">${m.sources.map((s) => `<li>${esc(s.text)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url.replace('https://', ''))}</a>` : ''}</li>`).join('')}</ol><p class="src">${esc(DATA.meta.sourcesNotice)}</p></details>`;
+
+  const head = `<div class="mhead">${crumbs([['בית', '#/'], ['ספרייה', href('library')], [c.name, catHref(c)], [m.name, null]])}
+    <div class="mtitle"><h1 class="page-title">${esc(m.name)} <span class="latin">${esc(m.nameEn)}</span></h1>
+    <div class="pager"><a class="icon-btn" href="${modelHref(prev)}" aria-label="הקודם בתחום: ${esc(prev.name)}" title="${esc(prev.name)}">›</a><span class="num">${idx + 1}/${ms.length}</span><a class="icon-btn" href="${modelHref(next)}" aria-label="הבא בתחום: ${esc(next.name)}" title="${esc(next.name)}">‹</a></div></div>${facts}</div>`;
+  return `<div class="model-wrap">${head}${layout('lay-model', [
+    { id: 'know', label: '1 היכרות', html: know },
+    { id: 'understand', label: '2 הבנה', html: understand },
+    { id: 'apply', label: '3 יישום', html: apply },
+  ], params)}</div>`;
+}
+
+function library(parts, params) {
+  if (!parts[1]) return libraryHome(params);
+  const c = catOf(parts[1]);
+  if (!c) return `<div class="layout lay-plain"><div class="card empty"><h1 class="page-title">התחום לא נמצא.</h1><a class="press btn btn-main" href="${href('library')}">לספרייה</a></div></div>`;
+  if (!parts[2]) return categoryPage(c, params);
+  const m = DATA.models.find((x) => x.id === parts[2] && x.category === c.id);
+  if (!m) return `<div class="layout lay-plain"><div class="card empty"><h1 class="page-title">המודל לא נמצא.</h1><a class="press btn btn-main" href="${catHref(c)}">לתחום</a></div></div>`;
+  return modelPage(m, params);
 }
 
 // ---------- יומן ----------
@@ -446,12 +573,13 @@ function render() {
   let html;
   if (page === 'diagnose') html = diagnose(params);
   else if (page === 'result') html = result(params);
-  else if (page === 'library') html = library(params);
-  else if (page === 'model') html = modelPage(parts[1], params);
+  else if (page === 'library') html = library(parts, params);
+  else if (page === 'model') { const m = DATA.models.find((x) => x.id === parts[1]); if (m) { location.replace(modelHref(m)); return; } html = library(['library'], params); }
   else if (page === 'log') html = logPage(params);
   else html = home(params);
   app.innerHTML = html;
   setTabs(page === 'model' ? 'library' : page === 'result' ? 'diagnose' : page);
+  if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
   setMenuItems(page);
   if (page === 'home') mountHome();
   if (page === 'result') mountResult();
@@ -471,6 +599,16 @@ function saveDecision(patch) {
   if (store.set(LOG_KEY, log)) flashSaved();
 }
 
+// הדגמה: כל השלבים גלויים, והשלב הנוכחי מודגש
+function demoPos(box) { const fs = [...box.querySelectorAll('.demo-f')]; box.querySelector('.demo-pos').textContent = `${fs.findIndex((f) => f.classList.contains('on')) + 1}/${fs.length}`; }
+function demoGo(box, d, wrap = true) {
+  const fs = [...box.querySelectorAll('.demo-f')];
+  const i = fs.findIndex((f) => f.classList.contains('on'));
+  let n = i + d;
+  if (n >= fs.length || n < 0) { if (!wrap) return false; n = (n + fs.length) % fs.length; }
+  fs.forEach((f, k) => f.classList.toggle('on', k === n)); demoPos(box);
+  return true;
+}
 const mountVisible = () => { const page = parseRoute().parts[0] || 'home'; if (page === 'home') mountHome(); if (page === 'result') mountResult(); };
 
 app.addEventListener('click', (ev) => {
@@ -500,6 +638,19 @@ app.addEventListener('click', (ev) => {
     setParam('case', c.dataset.case);
     return;
   }
+  const st = ev.target.closest('[data-step]');
+  if (st) { if (demoTimer) { clearInterval(demoTimer); demoTimer = null; } demoGo(st.closest('[data-demo]'), Number(st.dataset.step)); return; }
+  const pl = ev.target.closest('[data-play]');
+  if (pl) {
+    const box = pl.closest('[data-demo]');
+    if (demoTimer) { clearInterval(demoTimer); demoTimer = null; pl.textContent = 'הפעלה'; return; }
+    box.querySelectorAll('.demo-f').forEach((f, i) => f.classList.toggle('on', i === 0)); demoPos(box);
+    pl.textContent = 'עצירה';
+    demoTimer = setInterval(() => { if (!demoGo(box, 1, false)) { clearInterval(demoTimer); demoTimer = null; pl.textContent = 'הפעלה'; } }, 2200);
+    return;
+  }
+  const df = ev.target.closest('.demo-f');
+  if (df) { const box = df.closest('[data-demo]'); box.querySelectorAll('.demo-f').forEach((f) => f.classList.toggle('on', f === df)); demoPos(box); return; }
   const cn = ev.target.closest('[data-conn]');
   if (cn) { setParam('c', cn.dataset.conn); render(); return; }
   const evb = ev.target.closest('[data-ev]');

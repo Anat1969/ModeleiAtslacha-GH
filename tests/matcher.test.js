@@ -170,3 +170,23 @@ test('הצלבה מול הדוח: SWOT מסטנפורד, מחלקת ייחוס �
 test('לכל מצב תשובות לדוגמה שמובילות אליו', () => {
   for (const st of data.states) assert.equal(match(data, st.sample).state.id, st.id, st.id);
 });
+
+// ---------- סדר הלמידה: כל מודל עם היכרות, הבנה ויישום ----------
+for (const m of data.models) {
+  test(`סדר הלמידה מלא: ${m.id}`, () => {
+    assert.ok(m.definition && m.story && m.graphicNote, `${m.id}: הגדרה, סיפור, שרטוט`);
+    assert.ok(m.insight.split(/\s+/).length <= 8, `${m.id}: תובנה עד 8 מילים`);
+    assert.equal(m.haiku.length, 3, `${m.id}: הייקו בשלוש שורות`);
+    assert.ok(m.demo.frames.length >= 3, `${m.id}: הדגמה של 3 שלבים לפחות`);
+    assert.equal(m.examples.length, 2, `${m.id}: שתי דוגמאות`);
+    assert.ok(Array.isArray(m.applied), `${m.id}: רשימת יישומים (גם ריקה)`);
+    assert.ok(data.categories.some((c) => c.id === m.category), `${m.id}: תחום קיים`);
+    assert.ok(m.agreementFit.length >= 1, `${m.id}: טווח הסכמה למיקום היחסי`);
+  });
+}
+test('כל תחום עם מודל אחד לפחות ותובנה קצרה', () => {
+  for (const c of data.categories) {
+    assert.ok(data.models.some((m) => m.category === c.id), c.id);
+    assert.ok(c.insight.split(/\s+/).length <= 8, `${c.id}: תובנה עד 8 מילים`);
+  }
+});
