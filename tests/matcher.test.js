@@ -159,3 +159,10 @@ test('תיקוני ייחוס מהמסמך: מאסלו ואיקיגאי', () => 
   assert.match(maslow.authorEn, /McDermid/);
   assert.match(findModel(data, 'ikigai-kamiya').correction, /2014/);
 });
+
+test('הצלבה מול הדוח: SWOT מסטנפורד, מחלקת ייחוס חזקה, היל ווסטברוק 20 חברות', () => {
+  assert.match(findModel(data, 'swot').authorEn, /Stewart/);
+  assert.equal(findModel(data, 'reference-class').evidence, 'strong');
+  assert.match(findModel(data, 'swot').evidenceNote, /20/);
+  assert.equal(data.knowledge.connections.length, 3);
+});
