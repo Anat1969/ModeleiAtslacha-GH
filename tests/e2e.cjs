@@ -105,6 +105,15 @@ async function ready(url) {
     ok((await page.locator('main').textContent()).includes('תחזית לפי מחלקת ייחוס'), `${name}: תקציב פרויקט -> מחלקת ייחוס`);
     ok((await page.locator('[data-tab="counter"]').textContent()).includes('פרה-מורטם'), `${name}: המודל הנגדי לתקציב: פרה-מורטם`);
     ok((await page.locator('.fit-n').textContent()).includes('100'), `${name}: אחוז התאמה מוצג`);
+    ok(await page.locator('[data-print]').count() === 1, `${name}: כפתור דוח A4 בדף התוצאה`);
+    if (!mob) {
+      await page.emulateMedia({ media: 'print' });
+      const pdf = await page.pdf({ format: 'A4', printBackground: true });
+      const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+      ok(pages === 1, `${name}: דוח A4 בעמוד אחד (${pages})`);
+      ok(await page.locator('.print-report').isVisible(), `${name}: בהדפסה מוצג הדוח, לא המסך`);
+      await page.emulateMedia({ media: 'screen' });
+    }
     await shot('result-budget');
 
     // מקרה 3: שיתוף ציבור
@@ -145,6 +154,7 @@ async function ready(url) {
     await page.click('[data-step="1"]');
     ok((await page.locator('.demo-pos').textContent()).startsWith('2/'), `${name}: הדגמה עוברת לשלב הבא`);
     await pane('apply');
+    ok(await page.locator('.post [data-copy]').count() === 1 && (await page.locator('.post-t .line').count()) >= 5, `${name}: פוסט מוכן לשיתוף עם כפתור העתקה`);
     ok(await page.evaluate(() => { const p = document.querySelector('.pane-apply'); return p.lastElementChild.classList.contains('sources-d'); }), `${name}: המקורות אחרונים`);
     await shot('model');
 
