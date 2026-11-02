@@ -190,3 +190,12 @@ test('כל תחום עם מודל אחד לפחות ותובנה קצרה', () =
     assert.ok(c.insight.split(/\s+/).length <= 8, `${c.id}: תובנה עד 8 מילים`);
   }
 });
+
+test('פוסט לכל מודל: 80 עד 150 מילים, ומסתיים בשאלה', () => {
+  for (const m of data.models) {
+    const w = m.post.split(/\s+/).length;
+    assert.ok(w >= 80 && w <= 150, `${m.id}: ${w} מילים`);
+    assert.ok(m.post.trim().endsWith('?'), `${m.id}: מסתיים בשאלה`);
+    assert.ok(!/#/.test(m.post), `${m.id}: בלי האשטגים`);
+  }
+});

@@ -383,13 +383,49 @@ function result(params) {
       <label class="label" for="note">מה השתנה, או למה לא. בדיקה חוזרת בעוד 30 יום.</label>
       <textarea id="note" class="field" placeholder="משפט אחד ליומן">${esc(entry?.note || '')}</textarea>
       <span class="saved" aria-live="polite">נשמר</span>
-    </div>`;
+    </div>
+    <button class="press btn btn-main a4-btn" data-print>דוח A4 לישיבה</button>
+    <p class="src">דוח של עמוד אחד: האבחון, המודלים, הצעדים ושאלת הבקרה. אפשר לשמור אותו כ-PDF.</p>`;
 
   return layout('lay-result', [
     { id: 'sum', label: '1 האבחון', html: summary },
     { id: 'models', label: '2 המודלים', html: zone(2, 'המודלים') + tabs('res', views, params.v) },
     { id: 'act', label: '3 יישום', html: act },
-  ], params);
+  ], params) + report(answers, r, entry);
+}
+
+// ---------- דוח A4: עמוד אחד לישיבה, מוצג רק בהדפסה ----------
+function report(answers, r, entry) {
+  const s = r.state;
+  const today = new Date();
+  const fmt = (d) => d.toLocaleDateString('he-IL');
+  const recheck = new Date((entry ? +new Date(entry.date) : +today) + 30 * DAY);
+  const desc = entry?.description || store.get(DRAFT_KEY, '');
+  const mcol = (m, role, why) => `<div class="rp-model">
+    <span class="rp-role">${role}</span>
+    <div class="rp-mhead"><div><h3>${esc(m.name)}</h3><p class="rp-src">${esc(m.author)}${m.year ? `, <span class="num">${m.year}</span>` : ''} · ${esc(DATA.meta.evidenceLevels[m.evidence].label)}</p></div><div class="rp-g">${glyph(m)}</div></div>
+    <p>${rich(m.definition)}</p>
+    <p class="rp-ins">${rich('==' + m.insight + '==')}</p>
+    ${why ? `<p class="rp-small">${rich(why)}</p>` : ''}
+    <p class="rp-small"><strong>מתי מטעה:</strong> ${rich(m.misleading)}</p>
+  </div>`;
+  return `<article class="print-report" aria-hidden="true">
+    <header class="rp-head"><div><strong>מתאם מודלים</strong> · דוח אבחון</div><div class="num">${fmt(today)}</div></header>
+    ${desc ? `<p class="rp-desc"><span class="rp-lab">הבעיה</span>${esc(desc)}</p>` : ''}
+    <section class="rp-top">
+      <div><span class="rp-lab">מצב מאובחן</span><h1>${rich(s.insight)}</h1><p><strong>${esc(s.title)}</strong> · התאמה <span class="num">${r.fit}%</span></p>
+        ${r.status === 'framing' ? '<p class="rp-box rp-insight"><strong>אין כאן פתרון. יש תהליך מסגור.</strong></p>' : ''}
+        <p class="rp-box rp-warn"><strong>תווית אזהרה:</strong> ${rich(s.warning)}</p></div>
+      <table class="rp-ans"><tbody>${QUESTION_KEYS.map((k, i) => `<tr><td class="num">${i}</td><td>${esc(titleOf(DATA, k))}</td><td><strong>${esc(labelOf(DATA, k, answers[k]))}</strong></td></tr>`).join('')}</tbody></table>
+    </section>
+    <section class="rp-models">${r.primary.map((m) => mcol(m, 'מודל ראשי')).join('')}${mcol(r.counter.model, 'מודל נגדי', r.counter.why)}</section>
+    <section class="rp-steps"><span class="rp-lab">שלושה צעדי יישום</span><ol>${s.steps.map((x, i) => `<li><span class="num">${i + 1}</span>${rich(x)}</li>`).join('')}</ol></section>
+    <section class="rp-control"><span class="rp-lab">שאלת בקרה</span>
+      <p><strong>האם המודל שינה החלטה?</strong> <span class="rp-check">כן</span><span class="rp-check">חלקית</span><span class="rp-check">לא</span> <span class="rp-small">בדיקה חוזרת: <span class="num">${fmt(recheck)}</span></span></p>
+      <p class="rp-small">${esc(r.primary[0].control)}</p>
+      <div class="rp-lines"><i></i><i></i></div></section>
+    <footer class="rp-foot">${esc(DATA.meta.tableNotice)} · modeleiatslacha-gh.vercel.app</footer>
+  </article>`;
 }
 
 function mountResult() {}
@@ -498,6 +534,9 @@ function modelPage(m, params) {
     <h2 class="sub">מה אומרות הראיות</h2><p class="small">${lines(m.evidenceNote)}</p>
     <h2 class="sub">באבחון</h2>
     ${asPrimary.length || asCounter.length ? `${asPrimary.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">ראשי</span><span>${esc(s.title)}</span></a>`).join('')}${asCounter.map((s) => `<a class="dense-link press" href="${href('result', s.sample)}"><span class="label">נגדי</span><span>${esc(s.title)}</span></a>`).join('')}` : `<p class="small muted">${m.inMatcher === false ? 'בספרייה בלבד. לפי הדוח, מודל נכנס לטבלה רק אחרי שהוא שינה החלטה אחת לפחות.' : 'לא מופיע באף מצב.'}</p>`}
+    <h2 class="sub">פוסט מוכן לשיתוף</h2>
+    <div class="post"><p class="post-t">${m.post.split('\n').map((l) => `<span class="line">${esc(l)}</span>`).join('')}</p>
+      <div class="row"><button class="press btn btn-quiet" data-copy="post">העתקת הפוסט</button><span class="saved copied" aria-live="polite">הועתק</span><span class="src num">${m.post.split(/\s+/).length} מילים</span></div></div>
     <details class="sources-d"><summary><span class="label">מקורות (${m.sources.length})</span></summary>
       <ol class="sources">${m.sources.map((s) => `<li>${esc(s.text)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url.replace('https://', ''))}</a>` : ''}</li>`).join('')}</ol><p class="src">${esc(DATA.meta.sourcesNotice)}</p></details>`;
 
@@ -651,6 +690,14 @@ app.addEventListener('click', (ev) => {
   }
   const df = ev.target.closest('.demo-f');
   if (df) { const box = df.closest('[data-demo]'); box.querySelectorAll('.demo-f').forEach((f) => f.classList.toggle('on', f === df)); demoPos(box); return; }
+  if (ev.target.closest('[data-print]')) { print(); return; }
+  const cp = ev.target.closest('[data-copy]');
+  if (cp) {
+    const text = [...cp.closest('.post').querySelectorAll('.post-t .line')].map((l) => l.textContent).join('\n');
+    const done = () => { const el = cp.parentElement.querySelector('.copied'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1600); };
+    (navigator.clipboard?.writeText(text) || Promise.reject()).then(done).catch(() => { const t = document.createElement('textarea'); t.value = text; document.body.append(t); t.select(); try { document.execCommand('copy'); done(); } catch {} t.remove(); });
+    return;
+  }
   const cn = ev.target.closest('[data-conn]');
   if (cn) { setParam('c', cn.dataset.conn); render(); return; }
   const evb = ev.target.closest('[data-ev]');
