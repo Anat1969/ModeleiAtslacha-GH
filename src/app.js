@@ -156,7 +156,6 @@ function structureMap(current) {
 function home(params) {
   const models = DATA.models, k = DATA.knowledge;
   const wrong = models.filter((m) => m.attributedTo).length;
-  const strong = models.filter((m) => m.evidence === 'strong').length;
   const log = store.get(LOG_KEY, []);
   const caseId = params.case || 'neighborhood';
   const c = CASES.find((x) => x.id === caseId) || CASES[0];
