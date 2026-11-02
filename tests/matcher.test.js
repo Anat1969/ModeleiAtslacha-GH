@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { match, findModel, QUESTION_KEYS, suggest } from '../src/matcher.js';
+import { match, findModel, QUESTION_KEYS, suggest, compareSuggestion } from '../src/matcher.js';
 
 const data = JSON.parse(readFileSync(new URL('../data/models.json', import.meta.url), 'utf8'));
 
@@ -224,4 +224,12 @@ test('כל ערך במילון הוא תשובה קיימת', () => {
   const valid = Object.fromEntries(data.questions.map((q) => [q.id, q.options.map((o) => o.id)]));
   valid.intent = data.intents.map((i) => i.id);
   for (const [k, vals] of Object.entries(data.lexicon)) for (const v of Object.keys(vals)) assert.ok(valid[k]?.includes(v), `${k}=${v}`);
+});
+
+test('השוואת הצעה לבחירה: כמה צדקה, ואיפה תוקנה', () => {
+  const r = compareSuggestion({ agreement: 'no', layer: 'site', unit: 'public' }, { agreement: 'no', layer: 'space', unit: 'public', data: 'yes' });
+  assert.equal(r.total, 3);
+  assert.equal(r.agree, 2);
+  assert.deepEqual(r.misses, [{ key: 'layer', suggested: 'site', chosen: 'space' }]);
+  assert.deepEqual(compareSuggestion({}, { layer: 'site' }), { total: 0, agree: 0, misses: [] });
 });

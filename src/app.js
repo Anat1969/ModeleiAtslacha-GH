@@ -1,12 +1,13 @@
 // מתאם מודלים: ממשק. כל הטקסט התוכני מגיע מ-data/models.json, וההתאמה מ-matcher.js.
 // כל דף הוא קומפוזיציה בגובה המסך: מוקד גרפי אחד, וטורי צד. בנייד: לשוניות במקום גלילה.
-import { match, findModel, labelOf, titleOf, QUESTION_KEYS, suggest } from './matcher.js';
+import { match, findModel, labelOf, titleOf, QUESTION_KEYS, suggest, compareSuggestion } from './matcher.js';
 import { attachVoice } from './voice.js';
 import { glyph, driftChart, optionGlyph, DiagnosisCube, EV_COLOR } from './graphics.js';
 let demoTimer = null;
 
 const LOG_KEY = 'matcher.log.v1';
 const DRAFT_KEY = 'matcher.draft.v1';
+const SUG_KEY = 'matcher.sugg.v1'; // ההצעה האחרונה שהוחלה: התיאור, מה הוצע, ואיזו מילה הובילה
 const DAY = 864e5;
 const app = document.getElementById('app');
 let DATA = null;
@@ -343,6 +344,22 @@ function relative(answers, primary, counter) {
   return `<p class="cap"><strong>איפה הבעיה שלך, ביחס לכל מודל.</strong> פס כהה: המודל הראשי מתאים. פס מקווקו: המודל הנגדי. נקודה אדומה: התשובה שלך.</p>${verdict}<div class="rel scroll-in">${blocks}</div>`;
 }
 
+// ההצעה מול הבחירה: המנוע מודד את עצמו, וכל תיקון שלך מלמד אותו.
+function currentSug(entry) {
+  if (entry?.sugg) return entry.sugg;
+  const s = store.get(SUG_KEY, null);
+  return s && s.text === store.get(DRAFT_KEY, '') ? s : null;
+}
+function sugAgreement(entry, answers) {
+  const s = currentSug(entry);
+  if (!s) return '';
+  const c = compareSuggestion(s.suggested, answers);
+  if (!c.total) return '';
+  return `<div class="sug-agree"><span class="label">ההצעה מהתיאור מול הבחירה שלך</span>
+    <p class="small">${rich(`ההצעה צדקה ב-**${c.agree}** מתוך **${c.total}**.`)}</p>
+    ${c.misses.map((x) => `<span class="line small"><span class="num qn">${QUESTION_KEYS.indexOf(x.key)}</span> ${esc(titleOf(DATA, x.key))}: הוצע ${esc(labelOf(DATA, x.key, x.suggested))}, ונבחר <strong>${esc(labelOf(DATA, x.key, x.chosen))}</strong>.</span>`).join('')}
+    ${c.misses.length ? '<p class="src">הפספוסים נאספים ביומן, כדי להוסיף מילים למילון.</p>' : ''}</div>`;
+}
 function result(params) {
   const answers = answersFrom(params);
   const r = match(DATA, answers);
@@ -378,6 +395,7 @@ function result(params) {
     ${r.status === 'framing' ? `<div class="tone tone-insight"><h4>אין כאן פתרון. יש תהליך מסגור.</h4><p>${lines('בבעיה מרושעת כל הגדרה היא עמדה. המטרה: סבב שיפור מוסכם.')}</p></div>` : ''}
     ${r.notes.filter((n) => r.status !== 'framing' || !n.includes('אין כאן פתרון')).map((n) => `<div class="tone tone-neutral"><p>${lines(n)}</p></div>`).join('')}
     <div class="tone tone-problem"><h4>תווית אזהרה</h4><p>${lines(s.warning)}</p></div>
+    ${sugAgreement(entry, answers)}
     <h2 class="sec">התשובות שלך, לפי סדר השאלות</h2>${answersRows(answers)}`;
 
   const views = [
@@ -579,6 +597,26 @@ function library(parts, params) {
 }
 
 // ---------- יומן ----------
+// מדד מנוע ההצעה: אחוז הסכמה לכל שאלה, והפספוסים בנוסח מוכן לשליחה.
+function sugMetric(log) {
+  const rows = log.filter((e) => e.sugg).map((e) => ({ e, c: compareSuggestion(e.sugg.suggested, e.answers) })).filter((x) => x.c.total);
+  if (!rows.length) return `<p class="src">${lines('מדד מנוע ההצעה יופיע כאן אחרי אבחון שהתחיל מהצעה מתוך תיאור.')}</p>`;
+  const per = QUESTION_KEYS.map((k) => {
+    const had = rows.filter((x) => k in x.e.sugg.suggested);
+    return { k, n: had.length, ok: had.filter((x) => !x.c.misses.some((m) => m.key === k)).length };
+  }).filter((x) => x.n);
+  const agree = rows.reduce((a, x) => a + x.c.agree, 0), total = rows.reduce((a, x) => a + x.c.total, 0);
+  const missed = rows.filter((x) => x.c.misses.length);
+  const misses = missed.flatMap((x) => x.c.misses);
+  const missLine = (x, m) => { const w = x.e.sugg.hits?.[m.key] || []; return `שאלה ${QUESTION_KEYS.indexOf(m.key)}, ${titleOf(DATA, m.key)}: הוצע ${labelOf(DATA, m.key, m.suggested)}${w.length ? ` (בגלל: ${w.join(', ')})` : ''}, ונבחר ${labelOf(DATA, m.key, m.chosen)}.`; };
+  const msg = missed.map((x) => [`תיאור: "${x.e.sugg.text}"`, ...x.c.misses.map((m) => missLine(x, m))].join('\n')).join('\n\n');
+  return `<div class="sug-metric"><h2 class="sec">מדד מנוע ההצעה</h2>
+    <p>${rich(`ההצעה צדקה ב-**${agree}** מתוך **${total}** תשובות, ב-**${rows.length}** אבחונים.`)}</p>
+    ${per.map((x) => `<div class="hbar"><span class="label"><span class="num qn">${QUESTION_KEYS.indexOf(x.k)}</span> ${esc(titleOf(DATA, x.k))}</span><span class="hb"><i class="grow-x" style="width:${(100 * x.ok) / x.n}%;background:var(--bank)"></i></span><span class="num">${x.ok}/${x.n}</span></div>`).join('')}
+    ${misses.length ? `<div class="post"><span class="label">${misses.length} פספוסים, בנוסח מוכן לשליחה לקלוד להעשרת המילון</span><p class="post-t">${msg.split('\n').map((l) => `<span class="line${l.startsWith('תיאור') ? ' d' : ''}">${esc(l)}</span>`).join('')}</p>
+      <div class="row"><button class="press btn btn-quiet" data-copy="misses">העתקת הפספוסים</button><span class="saved copied" aria-live="polite">הועתק</span></div></div>` : `<p class="tone tone-insight small">${rich('==אין פספוסים: המילון כיסה את כל התיאורים עד עכשיו.==')}</p>`}
+    <p class="src">${lines('מדידה מקומית, במכשיר הזה בלבד. ההחלטה תמיד שלך, וההצעה נמדדת מולה.')}</p></div>`;
+}
 function logPage(params) {
   const log = store.get(LOG_KEY, []);
   if (!log.length) {
@@ -592,6 +630,7 @@ function logPage(params) {
     <h1 class="page-title">${rich(`המודל שינה החלטה ב-**${n('yes')}** מתוך **${log.length}**.`)}</h1>
     <p class="lead">${lines('זה המדד של הכלי עצמו: כלי שלא משנה החלטות הוא טקס.')}</p>
     ${bar('yes', 'var(--bank)')}${bar('partial', 'var(--ev-partial)')}${bar('no', 'var(--ink-mute)')}
+    ${sugMetric(log)}
     ${due ? `<div class="tone tone-insight"><h4>${due} אבחונים עברו 30 יום בלי תשובה.</h4><p>${lines('זה הזמן לבדוק: האם התוצר שימש להחלטה?')}</p></div>` : ''}`;
   const list = `<div class="scroll-in stack">${[...log].reverse().map((e) => {
     const r = match(DATA, e.answers);
@@ -652,7 +691,12 @@ function saveDecision(patch) {
   const log = store.get(LOG_KEY, []);
   const sig = JSON.stringify(answers);
   let e = log.find((x) => x.sig === sig);
-  if (!e) { e = { sig, answers, date: new Date().toISOString(), stateId: r.state.id, description: store.get(DRAFT_KEY, '') }; log.push(e); }
+  if (!e) {
+    e = { sig, answers, date: new Date().toISOString(), stateId: r.state.id, description: store.get(DRAFT_KEY, '') };
+    const s = currentSug(null);
+    if (s) e.sugg = s;
+    log.push(e);
+  }
   Object.assign(e, patch);
   if (store.set(LOG_KEY, log)) flashSaved();
 }
@@ -710,6 +754,11 @@ app.addEventListener('click', (ev) => {
   const df = ev.target.closest('.demo-f');
   if (df) { const box = df.closest('[data-demo]'); box.querySelectorAll('.demo-f').forEach((f) => f.classList.toggle('on', f === df)); demoPos(box); return; }
   if (ev.target.closest('[data-print]')) { print(); return; }
+  if (ev.target.closest('[data-apply]')) {
+    const text = store.get(DRAFT_KEY, '');
+    const { answers: suggested, hits } = suggest(DATA, text);
+    store.set(SUG_KEY, { text, suggested, hits });
+  }
   const cp = ev.target.closest('[data-copy]');
   if (cp) {
     const text = [...cp.closest('.post').querySelectorAll('.post-t .line')].map((l) => l.textContent).join('\n');

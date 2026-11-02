@@ -129,6 +129,24 @@ async function ready(url) {
     const body3 = await page.locator('main').textContent();
     ok(body3.includes('עבודות שצריך לעשות') && body3.includes('מודל קאנו') && body3.includes('סולם ההשתתפות'), `${name}: שיתוף ציבור -> JTBD, קאנו, ומודל נגדי ארנשטיין`);
 
+    // ההצעה מול הבחירה: המנוע מודד את עצמו, והפספוסים מגיעים ליומן
+    await go('#/diagnose?step=0');
+    await page.fill('#desc', 'תכנון שכונה חדשה: התושבים חלוקים, ויש התנגדות לבנייה על המגרש');
+    await page.waitForTimeout(200);
+    await page.click('[data-apply]');
+    await page.waitForTimeout(200);
+    await go('#/result?intent=users&cynefin=complex&agreement=partial&layer=space&unit=public&data=partial');
+    const agreeTxt = await page.locator('.sug-agree').textContent().catch(() => '');
+    ok(agreeTxt.includes('צדקה') && agreeTxt.includes('לא מסכימים'), `${name}: התוצאה מראה איפה ההצעה צדקה ואיפה תוקנה`);
+    await pane('act');
+    await page.click('[data-changed="partial"]');
+    await page.waitForTimeout(200);
+    await go('#/log');
+    const metric = await page.locator('.sug-metric').textContent().catch(() => '');
+    ok(metric.includes('מדד מנוע ההצעה') && metric.includes('פספוסים') && await page.locator('[data-copy="misses"]').count() === 1, `${name}: ביומן: מדד מנוע ההצעה ופספוסים מוכנים להעתקה`);
+    await noHScroll('יומן');
+    await shot('log-metric');
+
     // סתירה -> הבהרה
     await go('#/result?intent=tasks&cynefin=clear&agreement=no&layer=stuff&unit=person&data=yes');
     ok((await page.locator('h1').textContent()).includes('סותרות'), `${name}: סתירה מובילה לבקשת הבהרה`);
