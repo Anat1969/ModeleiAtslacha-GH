@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>מתאם מודלים</title>
+  <meta name="description" content="חמש שאלות אבחון, ומודל חשיבה מתאים עם מקורו האמיתי, רמת הראיות, תווית אזהרה ושאלת בקרה.">
+  <meta name="theme-color" content="#1F2A44">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/styles.css">
+  <script src="https://appofapp-gh.vercel.app/ai-menu.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="brand" href="#/" aria-label="מתאם מודלים, לדף הבית"><img src="assets/icon.svg" alt=""><span>מתאם מודלים</span></a>
+      <nav class="tabs" aria-label="ניווט ראשי">
+        <a class="tab" data-page="diagnose" href="#/diagnose?step=0">אבחון</a>
+        <a class="tab" data-page="library" href="#/library">ספרייה</a>
+        <a class="tab" data-page="log" href="#/log">יומן</a>
+      </nav>
+      <ai-menu chat="https://claude.ai/code/session_018qeN19UF5UhFt8VCqdemXm"></ai-menu>
+    </div>
+  </header>
+  <main id="app" class="page" tabindex="-1"><p class="muted">טוען את מאגר המודלים...</p></main>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

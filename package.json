@@ -1,0 +1,13 @@
+{
+  "name": "modelei-atslacha",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "מתאם מודלים: אבחון בעיה בחמש שאלות והתאמת מודל חשיבה עם מקורו האמיתי",
+  "scripts": {
+    "test": "node --test tests/matcher.test.js",
+    "serve": "python3 -m http.server 4173",
+    "e2e": "node tests/e2e.cjs",
+    "check": "npm test && npm run e2e"
+  }
+}

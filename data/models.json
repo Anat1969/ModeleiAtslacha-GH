@@ -1,0 +1,801 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "updated": "2026-11-02",
+    "tableNotice": "טבלת ההתאמה היא הערכה שמבוססת על הדוח \"מודלי חשיבה בבדיקה\", לא תוצאה מבוקרת.",
+    "sourcesNotice": "המקורות נרשמו מידע ביבליוגרפי מוכר, ועדיין לא הוצלבו מול הדוח המלא. רשימת הבדיקה: docs/research-status.md.",
+    "evidenceLevels": {
+      "strong": { "label": "אמפירית חזקה", "hint": "מחקרים מבוקרים חוזרים תומכים בטענה המרכזית." },
+      "partial": { "label": "חלקית", "hint": "חלק מהטענות נבדקו ונתמכו, וחלק לא." },
+      "anecdotal": { "label": "אנקדוטלית", "hint": "נשען על מקרי בוחן וניסיון מעשי, בלי בדיקה מבוקרת." },
+      "untested": { "label": "לא נבדקה", "hint": "מסגרת מושגית. לא נמצאה בדיקה אמפירית שלה." }
+    }
+  },
+
+  "intents": [
+    { "id": "tasks", "label": "עומס משימות אישי", "hint": "יותר מדי משימות, וצריך להחליט מה קודם." },
+    { "id": "roles", "label": "חלוקת אחריות בתהליך", "hint": "תהליך חוזר עם הרבה ממשקים, ולא ברור מי עושה מה." },
+    { "id": "strategy", "label": "החלטה אסטרטגית מוגדרת", "hint": "שאלה ממוקדת: להיכנס, להרחיב, לוותר." },
+    { "id": "market", "label": "ניתוח שוק או ענף", "hint": "להבין את כוחות התחרות סביב הארגון." },
+    { "id": "users", "label": "צורכי משתמשים במרחב או בשירות", "hint": "מה אנשים מנסים להשיג, ומה ישמח אותם." },
+    { "id": "goals", "label": "יעדים לצוות לרבעון", "hint": "לקבוע כיוון משותף ומדד התקדמות." },
+    { "id": "budget", "label": "תקציב ולוח זמנים לפרויקט גדול", "hint": "כמה זה יעלה וכמה זמן זה ייקח באמת." },
+    { "id": "conflict", "label": "בעלי עניין חלוקים על הבעיה", "hint": "כל צד מגדיר את הבעיה אחרת." },
+    { "id": "uncertainty", "label": "יוזמה חדשה באי-ודאות גבוהה", "hint": "אין ניסיון קודם, ואי אפשר לחזות מראש." },
+    { "id": "learning", "label": "תכנון למידה בהכשרה או בסטודיו", "hint": "מה הלומדים צריכים לדעת ולעשות בסוף." },
+    { "id": "direction", "label": "החלטה אישית על כיוון מקצועי", "hint": "לאן ללכת, ולמה זה חשוב לי." },
+    { "id": "complaints", "label": "תיעדוף תלונות או תקלות", "hint": "הרבה פניות, ומשאבים מוגבלים לטפל בהן." }
+  ],
+
+  "questions": [
+    {
+      "id": "cynefin",
+      "step": 1,
+      "title": "סוג הבעיה",
+      "insight": "הקשר בין סיבה לתוצאה קובע את הכלי.",
+      "explain": "לפי מסגרת Cynefin: האם ברור מה גורם למה, האם צריך מומחה כדי לגלות, או שרק בדיעבד מבינים.",
+      "source": "Kurtz & Snowden, 2003",
+      "modelId": "cynefin",
+      "options": [
+        { "id": "clear", "label": "ברורה", "hint": "סיבה ותוצאה גלויות לכולם. יש נוהל ידוע." },
+        { "id": "complicated", "label": "מסובכת", "hint": "יש תשובה נכונה, אבל צריך מומחה או ניתוח כדי למצוא אותה." },
+        { "id": "complex", "label": "מורכבת", "hint": "הסיבה מתבררת רק בדיעבד. כל פעולה משנה את המערכת." },
+        { "id": "chaotic", "label": "כאוטית", "hint": "משבר. אין זמן לנתח, וצריך קודם לייצב." }
+      ]
+    },
+    {
+      "id": "agreement",
+      "step": 2,
+      "title": "הגדרה מוסכמת",
+      "insight": "בלי הסכמה על הבעיה, אין פתרון אחד.",
+      "explain": "ריטל ווובר: בבעיה מרושעת, עצם הגדרת הבעיה היא כבר עמדה. כל צד רואה בעיה אחרת.",
+      "source": "Rittel & Webber, 1973",
+      "modelId": "rittel-webber",
+      "options": [
+        { "id": "yes", "label": "כן, מסכימים", "hint": "כל בעלי העניין היו מנסחים את הבעיה באותו משפט." },
+        { "id": "partial", "label": "חלקית", "hint": "מסכימים על הכיוון, חלוקים על הגבולות או על הסיבה." },
+        { "id": "no", "label": "לא מסכימים", "hint": "כל צד מגדיר בעיה אחרת, ולפעמים הפתרון של אחד הוא הבעיה של האחר." }
+      ]
+    },
+    {
+      "id": "layer",
+      "step": 3,
+      "title": "שכבת זמן",
+      "insight": "כל שכבה משתנה בקצב אחר.",
+      "explain": "דאפי ובראנד: בניין הוא שכבות שמתחלפות בקצבים שונים. אותו היגיון חל על ארגון, שירות ותוכנית: מה כמעט לא זז, ומה מתחלף כל יום.",
+      "source": "Duffy, 1990; Brand, 1994",
+      "modelId": "shearing-layers",
+      "options": [
+        { "id": "site", "label": "אתר", "years": "לתמיד", "hint": "מיקום, קרקע, חוק, ערכי יסוד. כמעט לא משתנה." },
+        { "id": "structure", "label": "מבנה", "years": "30 עד 300 שנה", "hint": "שלד, תשתית, מבנה ארגוני. שינוי יקר ונדיר." },
+        { "id": "skin", "label": "מעטפת", "years": "כ-20 שנה", "hint": "חזית, תדמית, הממשק עם החוץ." },
+        { "id": "services", "label": "מערכות", "years": "7 עד 15 שנה", "hint": "תהליכים, מערכות מידע, צנרת, חשמל." },
+        { "id": "space", "label": "חלוקת חלל", "years": "3 עד 30 שנה", "hint": "סידור החדרים, הצוותים ותחומי האחריות." },
+        { "id": "stuff", "label": "תכולה", "years": "ימים עד חודשים", "hint": "ריהוט, משימות, החלטות יומיות." }
+      ]
+    },
+    {
+      "id": "unit",
+      "step": 4,
+      "title": "יחידת ההחלטה",
+      "insight": "מי מחליט קובע מי צריך להיות בחדר.",
+      "explain": "החלטה של אדם אחד, של צוות, של ארגון או של ציבור דורשת כלים שונים לגמרי להסכמה ולביצוע.",
+      "source": "שאלת אבחון של האפליקציה",
+      "modelId": null,
+      "options": [
+        { "id": "person", "label": "אדם", "hint": "אני מחליט לבד, ואני גם מבצע." },
+        { "id": "team", "label": "צוות", "hint": "קבוצה קטנה שעובדת יחד באופן קבוע." },
+        { "id": "org", "label": "ארגון", "hint": "כמה מחלקות, היררכיה ותקציב משותף." },
+        { "id": "public", "label": "ציבור", "hint": "תושבים, משתמשים, בעלי עניין מחוץ לארגון." }
+      ]
+    },
+    {
+      "id": "data",
+      "step": 5,
+      "title": "בסיס נתונים",
+      "insight": "מקרים דומים מנצחים תחושת בטן.",
+      "explain": "כשיש נתונים על מקרים דומים, אפשר להתחיל מ\"מבט מבחוץ\". כשאין, השלב הראשון הוא לאסוף או לנסות בקטן.",
+      "source": "Kahneman & Tversky, 1979",
+      "modelId": "reference-class",
+      "options": [
+        { "id": "yes", "label": "יש נתונים", "hint": "יש רשומות או מקרים דומים שאפשר להשוות אליהם." },
+        { "id": "partial", "label": "חלקיים", "hint": "יש מעט מקרים, או נתונים לא שלמים." },
+        { "id": "none", "label": "אין", "hint": "מקרה חדש לגמרי, או שאף אחד לא תיעד." }
+      ]
+    }
+  ],
+
+  "contradictions": [
+    {
+      "id": "clear-without-agreement",
+      "when": { "cynefin": ["clear"], "agreement": ["no"] },
+      "ask": ["cynefin", "agreement"],
+      "message": "בעיה **ברורה** היא בעיה שכולם רואים באותו אופן. אם אין הסכמה על ההגדרה, היא כנראה **מורכבת** או מרושעת.",
+      "question": "מה נכון יותר: הבעיה ברורה, או שיש מחלוקת על מהי?"
+    },
+    {
+      "id": "person-without-agreement",
+      "when": { "unit": ["person"], "agreement": ["no"] },
+      "ask": ["unit", "agreement"],
+      "message": "החלטה של **אדם יחיד**, אבל **בלי הסכמה** על הבעיה. מי עוד מגדיר אותה אחרת?",
+      "question": "האם יש בעלי עניין נוספים, ואז יחידת ההחלטה רחבה יותר?"
+    },
+    {
+      "id": "clear-uncertainty",
+      "when": { "cynefin": ["clear"], "intent": ["uncertainty"] },
+      "ask": ["cynefin"],
+      "message": "בחרת **יוזמה באי-ודאות גבוהה**, אבל סימנת שהבעיה **ברורה**. אי-ודאות וסיבתיות גלויה לא הולכות יחד.",
+      "question": "האם ידוע מראש מה יקרה אם תפעלו?"
+    },
+    {
+      "id": "personal-direction-group",
+      "when": { "intent": ["direction"], "unit": ["team", "org", "public"] },
+      "ask": ["unit"],
+      "message": "בחרת **החלטה אישית על כיוון**, אבל יחידת ההחלטה היא **קבוצה**.",
+      "question": "האם זו החלטה שלך, או כיוון לצוות או לארגון?"
+    },
+    {
+      "id": "personal-tasks-group",
+      "when": { "intent": ["tasks"], "unit": ["team", "org", "public"] },
+      "ask": ["unit"],
+      "message": "בחרת **עומס משימות אישי**, אבל ההחלטה היא של **קבוצה**. תיעדוף בין אנשים או מחלקות הוא בעיה אחרת.",
+      "question": "האם מדובר במשימות שלך בלבד?"
+    },
+    {
+      "id": "team-goals-person",
+      "when": { "intent": ["goals", "roles"], "unit": ["person"] },
+      "ask": ["unit"],
+      "message": "**יעדים לצוות** או **חלוקת אחריות** דורשים יותר מאדם אחד.",
+      "question": "מי עוד שותף להחלטה?"
+    },
+    {
+      "id": "slow-layer-daily",
+      "when": { "intent": ["tasks", "complaints"], "layer": ["site", "structure"] },
+      "ask": ["layer"],
+      "message": "**משימות** ו**תקלות** שייכות לשכבה מהירה, אבל סימנת שכבה **איטית** של אתר או מבנה.",
+      "question": "האם הבעיה היא באמת בשלד, או בתפעול היומיומי?"
+    }
+  ],
+
+  "rules": {
+    "forceFraming": {
+      "when": { "agreement": ["no"] },
+      "state": "wicked",
+      "note": "אין הסכמה על הגדרת הבעיה. לכן אין כאן פתרון, יש תהליך מסגור."
+    },
+    "chaos": {
+      "when": { "cynefin": ["chaotic"] },
+      "state": "chaos",
+      "note": "במצב כאוטי מייצבים קודם, ורק אחר כך חוזרים לאבחון."
+    }
+  },
+
+  "states": [
+    {
+      "id": "eisenhower",
+      "title": "בעיה ברורה, אדם יחיד, עומס משימות",
+      "insight": "דחוף אינו חשוב.",
+      "intents": ["tasks"],
+      "requires": { "unit": ["person"], "cynefin": ["clear", "complicated"] },
+      "prefers": { "layer": ["stuff", "space", "services"], "agreement": ["yes"] },
+      "primary": ["eisenhower"],
+      "counter": { "id": "pareto", "why": "בודק בנתונים איזה חלק מהמשימות מייצר את רוב התוצאה, במקום לשפוט \"חשיבות\" בתחושה." },
+      "warning": "\"חשוב\" תלוי בעמדה. לא לתיעדוף בין מחלקות.",
+      "steps": [
+        "לרשום את כל המשימות הפתוחות ברשימה אחת, בלי למיין.",
+        "לסמן לכל משימה: מה קורה אם היא לא תיעשה בכלל? זה מבחן החשיבות.",
+        "לקבוע זמן קבוע ביומן לרבע \"חשוב ולא דחוף\" לפני כל דבר אחר."
+      ],
+      "example": "אדריכלית במחלקת ההנדסה בעיריית **אשדוד** Ashdod, עם 40 בקשות פתוחות בשבוע."
+    },
+    {
+      "id": "raci",
+      "title": "בעיה מסובכת, תהליך חוזר, ריבוי ממשקים",
+      "insight": "אחריות לא כתובה היא אחריות של אף אחד.",
+      "intents": ["roles"],
+      "requires": { "unit": ["team", "org"], "cynefin": ["clear", "complicated"] },
+      "prefers": { "agreement": ["yes"], "layer": ["services", "space"] },
+      "primary": ["raci"],
+      "counter": { "id": "cynefin", "why": "בודק אם התהליך באמת מסובך וחוזר, או מורכב ומשתנה. בתהליך מורכב טבלת תפקידים קפואה מטעה." },
+      "warning": "נכשל כשהאחריות עצמה שנויה במחלוקת.",
+      "steps": [
+        "לפרק את התהליך לשלבים, לפי מה שקורה בפועל ולא לפי הנוהל.",
+        "לכל שלב: אחראי ביצוע אחד בלבד, ומאשר אחד בלבד.",
+        "להציג את הטבלה לכל המשתתפים ולבקש מכל אחד לסמן איפה הוא לא מסכים."
+      ],
+      "example": "מסלול היתר בנייה בין מחלקת הרישוי, התנועה והאיכות הסביבה."
+    },
+    {
+      "id": "swot",
+      "title": "שאלה אסטרטגית ממוקדת עם החלטה מוגדרת",
+      "insight": "SWOT בלי שאלה הוא טקס.",
+      "intents": ["strategy"],
+      "requires": { "unit": ["team", "org"], "cynefin": ["complicated", "complex"] },
+      "prefers": { "agreement": ["yes", "partial"], "data": ["yes", "partial"] },
+      "primary": ["swot"],
+      "counter": { "id": "five-forces", "why": "מכריח להסתכל על הכוחות שמחוץ לארגון, שבהם SWOT נוטה להיות שטחי." },
+      "warning": "אם התוצר לא נכנס לשלב הבא, זה טקס.",
+      "steps": [
+        "לנסח את ההחלטה כשאלה של כן או לא, לפני שממלאים משבצת אחת.",
+        "עד 5 פריטים בכל רבע, וכל פריט עם ראיה אחת לפחות.",
+        "לחבר כל חוזקה להזדמנות וכל חולשה לאיום, ולגזור מזה 2 עד 3 פעולות."
+      ],
+      "example": "האם להקים מרכז קהילתי חדש ברובע ט״ו, או לחדש את הקיים."
+    },
+    {
+      "id": "five-forces",
+      "title": "ניתוח שוק או ענף",
+      "insight": "הענף מסביר פחות ממה שנדמה.",
+      "intents": ["market"],
+      "requires": { "unit": ["team", "org"], "cynefin": ["complicated", "complex"] },
+      "prefers": { "data": ["yes", "partial"], "agreement": ["yes", "partial"] },
+      "primary": ["five-forces"],
+      "counter": { "id": "swot", "why": "מחזיר את המבט פנימה: מחקרים מראים שהבדלים בין חברות באותו ענף גדולים מההבדלים בין ענפים." },
+      "warning": "הענף מסביר מיעוט מהשונות.",
+      "steps": [
+        "להגדיר את גבולות הענף: מוצר, לקוח וגאוגרפיה.",
+        "לכל אחד מחמשת הכוחות: מספר אחד שמודד אותו, לא רק תיאור.",
+        "לשאול מה מבדיל אתכם מהמתחרים באותו ענף, כי שם רוב השונות."
+      ],
+      "example": "מתחמי עבודה משותפים בנמל **אשדוד** Ashdod, מול **תל אביב** Tel Aviv ו**באר שבע** Be'er Sheva."
+    },
+    {
+      "id": "jtbd-kano",
+      "title": "הבנת צורכי משתמשים במרחב או בשירות",
+      "insight": "אנשים לא קונים מוצר, הם שוכרים פתרון.",
+      "intents": ["users"],
+      "requires": { "unit": ["team", "org", "public"], "cynefin": ["complicated", "complex"] },
+      "prefers": { "layer": ["skin", "services", "space", "stuff"], "agreement": ["yes", "partial"] },
+      "primary": ["jtbd", "kano"],
+      "counter": { "id": "arnstein", "why": "בודק אם המשתמשים שותפים להחלטה או רק מקור מידע. ראיון אינו השתתפות." },
+      "warning": "JTBD כמעט לא נבדק אמפירית. סיווג קאנו מתיישן.",
+      "steps": [
+        "לראיין 8 עד 12 משתמשים על הפעם האחרונה שהשתמשו במרחב: מה ניסו להשיג, ובמה החליפו אותו.",
+        "לנסח 3 עד 5 \"עבודות\" בפורמט: כאשר אני... אני רוצה... כדי ש...",
+        "לבנות שאלון קאנו על התכונות המוצעות ולחזור עליו אחרי שנה, כי הסיווג משתנה."
+      ],
+      "example": "תכנון מחדש של כיכר העירייה ב**אשדוד** Ashdod: מה עושים בה בשבת בבוקר ומה בערב."
+    },
+    {
+      "id": "okr",
+      "title": "הגדרת יעדים לצוות לרבעון",
+      "insight": "מה שנמדד הוא מה שנעשה, גם כשטועים.",
+      "intents": ["goals"],
+      "requires": { "unit": ["team", "org"], "cynefin": ["clear", "complicated", "complex"] },
+      "prefers": { "agreement": ["yes", "partial"], "data": ["yes", "partial"] },
+      "primary": ["okr"],
+      "counter": { "id": "reference-class", "why": "בודק את היעד מול מה שצוותים דומים השיגו בפועל, כדי שהשאפתנות לא תהיה הימור." },
+      "warning": "מדדי פעילות מעוותים התנהגות.",
+      "steps": [
+        "מטרה אחת במשפט, בלי מספר. היא אומרת לאן ולמה.",
+        "2 עד 4 תוצאות מפתח, וכל אחת מודדת שינוי אצל מישהו, לא כמות עבודה.",
+        "לכל תוצאה לשאול: איך אפשר להשיג את המספר ולפספס את המטרה? ולתקן."
+      ],
+      "example": "צוות התחדשות עירונית: \"תושבים מבינים את התוכנית לפני ההצבעה\", ולא \"10 כנסים\"."
+    },
+    {
+      "id": "reference-class",
+      "title": "תקציב ולוח זמנים לפרויקט גדול",
+      "insight": "הפרויקט שלך לא מיוחד כמו שנדמה.",
+      "intents": ["budget"],
+      "requires": { "unit": ["team", "org", "public"], "cynefin": ["complicated", "complex"] },
+      "prefers": { "data": ["yes", "partial"], "layer": ["site", "structure", "skin", "services"] },
+      "primary": ["reference-class"],
+      "counter": { "id": "cynefin", "why": "בודק אם הפרויקט באמת דומה למחלקת הייחוס, או שהוא מורכב ומשנה את הכללים." },
+      "warning": "דורש בחירה זהירה של פרויקטים דומים.",
+      "steps": [
+        "לבחור מחלקת ייחוס: 10 עד 20 פרויקטים דומים בהיקף, בסוג ובהקשר.",
+        "לבנות את התפלגות החריגות בפועל, בתקציב ובזמן, מהתכנון ועד הסיום.",
+        "למקם את הפרויקט בהתפלגות, ולהוסיף מרווח לפי רמת הסיכון שהארגון מוכן לקבל."
+      ],
+      "example": "קו הרכבת הקלה ב**ירושלים** Jerusalem כמחלקת ייחוס לתחבורה ציבורית מתוכננת ב**אשדוד** Ashdod.",
+      "guards": [
+        { "when": { "data": ["none"] }, "note": "אין נתונים על מקרים דומים. השלב הראשון הוא לבנות מחלקת ייחוס, גם מפרסומים של ערים אחרות." }
+      ]
+    },
+    {
+      "id": "wicked",
+      "framing": true,
+      "title": "בעיה מרושעת עם בעלי עניין חלוקים",
+      "insight": "אין פתרון, יש סבבים של שיפור.",
+      "intents": ["conflict"],
+      "requires": { "unit": ["team", "org", "public"], "cynefin": ["complicated", "complex"] },
+      "prefers": { "agreement": ["no", "partial"], "unit": ["public", "org"] },
+      "primary": ["rittel-webber", "arnstein"],
+      "counter": { "id": "reference-class", "why": "מזכיר שגם בבעיה מרושעת יש מקרים דומים בערים אחרות, שמהם אפשר ללמוד מה לא עבד." },
+      "warning": "אין פתרון. יש סבבים של שיפור.",
+      "steps": [
+        "למפות את בעלי העניין, ולרשום לכל אחד את הגדרת הבעיה שלו במשפט אחד, במילים שלו.",
+        "לקבוע במשותף מתי סבב נגמר ומה ייחשב שיפור, כי אין נקודת סיום טבעית.",
+        "לבחור את דרגת ההשתתפות בסולם של ארנשטיין במפורש, ולומר אותה לציבור מראש."
+      ],
+      "example": "התחדשות עירונית ברובע א׳ ב**אשדוד** Ashdod: דיירים, יזמים, העירייה ושכנים, וכל אחד רואה בעיה אחרת."
+    },
+    {
+      "id": "cynefin-probes",
+      "title": "בעיה מורכבת, אי-ודאות גבוהה, שכבה מהירה",
+      "insight": "בבעיה מורכבת לומדים רק מניסוי.",
+      "intents": ["uncertainty"],
+      "requires": { "cynefin": ["complex"], "layer": ["skin", "services", "space", "stuff"] },
+      "prefers": { "data": ["none", "partial"], "agreement": ["yes", "partial"] },
+      "primary": ["cynefin"],
+      "counter": { "id": "reference-class", "why": "מאזן את ההתלהבות מניסויים: בודק מה קרה ליוזמות דומות, כדי לא להמציא מחדש." },
+      "warning": "לא להשתמש בשכבת אתר או מבנה.",
+      "steps": [
+        "לתכנן 3 ניסויים קטנים במקביל, שכל אחד מהם זול מספיק כדי להיכשל.",
+        "לכל ניסוי: מה יגרום לנו להגדיל אותו, ומה יגרום לנו לעצור.",
+        "לבדוק תוצאות כל שבועיים, להגביר את מה שעובד ולסגור את מה שלא."
+      ],
+      "example": "רחוב הרברט סמואל ב**אשדוד** Ashdod: סגירה לרכב בשישי בבוקר כניסוי, לפני שינוי קבוע.",
+      "redirects": [
+        { "when": { "layer": ["site", "structure"] }, "to": "reference-class", "note": "בשכבת אתר או מבנה אין ניסוי בטוח לכישלון: מה שנבנה נשאר. לכן מתחילים ממבט מבחוץ על מקרים דומים." }
+      ]
+    },
+    {
+      "id": "bloom",
+      "title": "תכנון למידה בהכשרה או בסטודיו",
+      "insight": "מפה של יכולות, לא סולם.",
+      "intents": ["learning"],
+      "requires": { "cynefin": ["clear", "complicated", "complex"] },
+      "prefers": { "unit": ["team", "org"], "agreement": ["yes", "partial"] },
+      "primary": ["bloom-revised"],
+      "counter": { "id": "jtbd", "why": "שואל מה הלומד מנסה להשיג בעבודה שלו, ולא רק איזו רמה קוגניטיבית הוא צריך." },
+      "warning": "ההיררכיה המצטברת לא הוכחה.",
+      "steps": [
+        "לנסח 4 עד 6 תוצרי למידה בפועל: \"בסוף הסטודיו הסטודנט יוכל ל...\".",
+        "למקם כל תוצר בטבלה הדו-ממדית: סוג הידע מול התהליך הקוגניטיבי.",
+        "לתכנן משימה שמתרגלת יצירה כבר בשבוע הראשון, ולא רק אחרי זכירה והבנה."
+      ],
+      "example": "סטודיו לתכנון עירוני שמתחיל בסקר שטח ברובע הסיטי ב**אשדוד** Ashdod, ולא בהרצאה."
+    },
+    {
+      "id": "kamiya",
+      "title": "החלטה אישית או מקצועית על כיוון",
+      "insight": "משמעות קודמת לרווחיות.",
+      "intents": ["direction"],
+      "requires": { "unit": ["person"] },
+      "prefers": { "cynefin": ["complex", "complicated"], "data": ["none", "partial"] },
+      "primary": ["ikigai-kamiya"],
+      "counter": { "id": "reference-class", "why": "בודק מה קרה לאנשים שבחרו כיוון דומה, כדי שהמשמעות לא תסתיר סיכון כלכלי אמיתי." },
+      "warning": "הוון מחייב רווחיות ומצמצם משמעות.",
+      "steps": [
+        "לרשום 3 רגעים מהשנה האחרונה שבהם הרגשת שיש טעם במה שאת עושה, ומה היה בהם.",
+        "להפריד בין מקור המשמעות לבין מקור הפרנסה, ולא לדרוש מכיוון אחד את שניהם.",
+        "לבחור צעד קטן אחד לחודש הקרוב שמגדיל את הרגעים האלה."
+      ],
+      "example": "מתכננת עירונית ששוקלת מעבר מרישוי לתכנון אסטרטגי."
+    },
+    {
+      "id": "pareto",
+      "title": "תיעדוף תלונות או תקלות",
+      "insight": "מודדים את ההתפלגות, לא מניחים 80/20.",
+      "intents": ["complaints"],
+      "requires": { "unit": ["team", "org", "public"], "cynefin": ["clear", "complicated"] },
+      "prefers": { "data": ["yes", "partial"], "layer": ["services", "stuff", "space"] },
+      "primary": ["pareto"],
+      "counter": { "id": "kano", "why": "מזכיר שתקלה נדירה יכולה להיות קריטית: שכיחות אינה חומרה." },
+      "warning": "לבדוק את ההתפלגות בפועל, לא להניח 80/20.",
+      "steps": [
+        "לסווג את הפניות של 3 החודשים האחרונים ל-8 עד 12 קטגוריות.",
+        "לסדר מהשכיחה לנדירה ולחשב אחוז מצטבר. זה הנתון, ולא 80/20.",
+        "לטפל קודם בקטגוריות העליונות, ולבדוק בנפרד תקלות נדירות שהן מסוכנות."
+      ],
+      "example": "פניות מוקד 106 ב**אשדוד** Ashdod: תאורת רחוב, פסולת, מפגעים.",
+      "guards": [
+        { "when": { "data": ["none"] }, "note": "אין נתונים. לפני ניתוח פארטו אוספים פניות לפחות חודש, בסיווג קבוע." }
+      ]
+    },
+    {
+      "id": "chaos",
+      "fromTable": false,
+      "title": "משבר: מצב כאוטי",
+      "insight": "קודם לייצב, אחר כך להבין.",
+      "intents": [],
+      "requires": { "cynefin": ["chaotic"] },
+      "prefers": {},
+      "primary": ["cynefin"],
+      "counter": { "id": "rittel-webber", "why": "אחרי הייצוב, בודק אם המשבר חשף בעיה מרושעת שאין לה פתרון אחד." },
+      "warning": "פעולה מהירה במשבר אינה תוכנית. אחרי הייצוב חוזרים לאבחון.",
+      "steps": [
+        "לפעול מיד כדי לעצור את הנזק: פעולה אחת, אחראי אחד, היום.",
+        "לבדוק מה השתנה אחרי הפעולה, ולתעד בזמן אמת.",
+        "כשהמצב יציב, לחזור לשאלה הראשונה ולאבחן מחדש."
+      ],
+      "example": "הצפה ברחובות אחרי סערה: קודם ניקוז ופינוי, ורק אחר כך תוכנית ניהול מי נגר."
+    }
+  ],
+
+  "models": [
+    {
+      "id": "eisenhower",
+      "name": "מטריצת אייזנהאואר",
+      "nameEn": "Eisenhower Matrix",
+      "author": "סטיבן קובי",
+      "authorEn": "Stephen R. Covey",
+      "attributedTo": "דווייט אייזנהאואר (Dwight D. Eisenhower)",
+      "correction": "אייזנהאואר לא צייר מטריצה. הוא ציטט ב-1954 נשיא קולג׳ לשעבר: \"יש לי שני סוגי בעיות, הדחופות והחשובות\". המטריצה בארבעה רבעים נוצרה בידי קובי ב-1989.",
+      "year": 1989,
+      "context": "ספר עזרה עצמית לניהול זמן אישי, \"7 ההרגלים של אנשים אפקטיביים במיוחד\".",
+      "assumption": "חשיבות היא תכונה קבועה של משימה, ואדם אחד יכול לשפוט אותה.",
+      "problemTypes": ["clear", "complicated"],
+      "layers": ["stuff", "space"],
+      "evidence": "anecdotal",
+      "evidenceNote": "המטריצה עצמה לא נבדקה במחקר מבוקר. מחקר על \"אפקט הדחיפות\" מראה שאנשים אכן מעדיפים משימות דחופות על חשובות, גם כשהתמורה נמוכה יותר.",
+      "misleading": "כשאנשים שונים מגדירים \"חשוב\" אחרת, למשל בין מחלקות.",
+      "misuse": "תיעדוף בין צוותים, שבו המטריצה מסתירה מאבק כוח מאחורי ציון \"חשיבות\".",
+      "control": "איזו משימה העברת לרבע \"לא חשוב\" שמישהו אחר היה קורא לה חשובה?",
+      "sources": [
+        { "text": "Covey, S. R. (1989). The 7 Habits of Highly Effective People. Free Press." },
+        { "text": "Eisenhower, D. D. (1954). Address at the Second Assembly of the World Council of Churches, Evanston, Illinois, 19 August 1954." },
+        { "text": "Zhu, M., Yang, Y., & Hsee, C. K. (2018). The mere urgency effect. Journal of Consumer Research, 45(3), 673–690.", "url": "https://doi.org/10.1093/jcr/ucy008" }
+      ]
+    },
+    {
+      "id": "raci",
+      "name": "מטריצת RACI",
+      "nameEn": "RACI Matrix",
+      "author": "מקור ראשוני לא אותר",
+      "authorEn": "Unknown origin",
+      "attributedTo": null,
+      "correction": "הכלי נפוץ בספרות ניהול פרויקטים, אבל המקור הראשוני שלו לא נבדק במסגרת המחקר.",
+      "year": null,
+      "context": "ניהול פרויקטים ותהליכים ארגוניים.",
+      "assumption": "אפשר לפרק עבודה לשלבים ברורים, ולכל שלב יש בעלים מוסכם.",
+      "problemTypes": ["clear", "complicated"],
+      "layers": ["services", "space"],
+      "evidence": "untested",
+      "evidenceNote": "לא נמצאה בדיקה אמפירית. לא נבדק במקורות ראשוניים.",
+      "misleading": "כשהאחריות עצמה שנויה במחלוקת, או כשהתהליך משתנה מפעם לפעם.",
+      "misuse": "טבלה שממלאים פעם אחת ושוכחים, במקום הסכם שבודקים מול מה שקורה בפועל.",
+      "control": "באיזה שלב שני אנשים בטוחים שהם המאשרים?",
+      "sources": [
+        { "text": "לא נבדק במקורות ראשוניים. ממתין לבדיקה ולהוספה לרשימת המחקר." }
+      ]
+    },
+    {
+      "id": "swot",
+      "name": "ניתוח SWOT",
+      "nameEn": "SWOT Analysis",
+      "author": "לרנד, כריסטנסן, אנדרוז וגות׳, בית הספר למנהל עסקים של הרווארד",
+      "authorEn": "Learned, Christensen, Andrews & Guth, Harvard Business School",
+      "attributedTo": "אלברט האמפרי (Albert Humphrey), מכון SRI",
+      "correction": "הייחוס לאלברט האמפרי ב-SRI נפוץ אך לא מבוסס. מחקר היסטורי מראה שהמסגרת התגבשה בקורס מדיניות עסקית בהרווארד בשנות ה-60.",
+      "year": 1965,
+      "context": "ספר הלימוד \"Business Policy: Text and Cases\", לתכנון אסטרטגי בחברות.",
+      "assumption": "אפשר להפריד בבירור בין מה שבתוך הארגון לבין מה שמחוצה לו.",
+      "problemTypes": ["complicated", "complex"],
+      "layers": ["structure", "skin"],
+      "evidence": "anecdotal",
+      "evidenceNote": "סקר של 50 חברות מצא שתוצרי SWOT כמעט לא שימשו בשלבים הבאים של התכנון.",
+      "misleading": "כשאין החלטה מוגדרת, הניתוח הופך לרשימה ארוכה בלי משקל.",
+      "misuse": "סדנה שבה ממלאים ארבע משבצות ומסיימים, בלי לגזור פעולה.",
+      "control": "איזו החלטה שונה בגלל הטבלה?",
+      "sources": [
+        { "text": "Learned, E. P., Christensen, C. R., Andrews, K. R., & Guth, W. D. (1965). Business Policy: Text and Cases. Irwin." },
+        { "text": "Hill, T., & Westbrook, R. (1997). SWOT analysis: It's time for a product recall. Long Range Planning, 30(1), 46–52." },
+        { "text": "Puyt, R. W., Lie, F. B., & Wilderom, C. P. M. (2023). The origins of SWOT analysis. Long Range Planning, 56(3), 102304." }
+      ]
+    },
+    {
+      "id": "five-forces",
+      "name": "חמשת הכוחות",
+      "nameEn": "Porter's Five Forces",
+      "author": "מייקל פורטר",
+      "authorEn": "Michael E. Porter",
+      "attributedTo": null,
+      "correction": null,
+      "year": 1979,
+      "context": "מאמר ב-Harvard Business Review, על בסיס כלכלת ארגון תעשייתי.",
+      "assumption": "מבנה הענף קובע את הרווחיות, והחברה היא שחקן בתוך מבנה נתון.",
+      "problemTypes": ["complicated", "complex"],
+      "layers": ["site", "structure"],
+      "evidence": "partial",
+      "evidenceNote": "מחקרי פירוק שונות מצאו שהענף מסביר מיעוט מההבדלים ברווחיות, והגורמים הייחודיים לחברה מסבירים יותר.",
+      "misleading": "בשוק שגבולותיו מטושטשים, או בפלטפורמות שבהן הלקוח הוא גם הספק.",
+      "misuse": "תיאור של חמשת הכוחות בלי מספרים, שאי אפשר לגזור ממנו החלטה.",
+      "control": "מה מבדיל אתכם ממתחרה באותו ענף, ואיזה כוח לא מסביר את זה?",
+      "sources": [
+        { "text": "Porter, M. E. (1979). How competitive forces shape strategy. Harvard Business Review, 57(2), 137–145." },
+        { "text": "Rumelt, R. P. (1991). How much does industry matter? Strategic Management Journal, 12(3), 167–185.", "url": "https://doi.org/10.1002/smj.4250120302" },
+        { "text": "McGahan, A. M., & Porter, M. E. (1997). How much does industry matter, really? Strategic Management Journal, 18(S1), 15–30." }
+      ]
+    },
+    {
+      "id": "jtbd",
+      "name": "עבודות שצריך לעשות",
+      "nameEn": "Jobs to Be Done",
+      "author": "קלייטון כריסטנסן",
+      "authorEn": "Clayton M. Christensen",
+      "attributedTo": null,
+      "correction": "הרעיון קדם לכריסטנסן: תאודור לוויט (Theodore Levitt) לימד ש\"אנשים לא רוצים מקדחה, הם רוצים חור\". טוני אולוויק (Tony Ulwick) פיתח שיטה מקבילה. כריסטנסן הפך אותו למסגרת מוכרת.",
+      "year": 2003,
+      "context": "ספר על חדשנות עסקית, \"The Innovator's Solution\", והורחב במאמר ב-2016.",
+      "assumption": "לכל שימוש יש מטרה יציבה שאפשר לנסח, והיא לא תלויה במוצר.",
+      "problemTypes": ["complicated", "complex"],
+      "layers": ["skin", "services", "space"],
+      "evidence": "anecdotal",
+      "evidenceNote": "כמעט לא נבדק אמפירית. נשען על מקרי בוחן של יועצים ושל חברות.",
+      "misleading": "כשהמשתמשים עצמם לא יודעים מה הם מנסים להשיג, או כשיש כמה משתמשים עם מטרות סותרות.",
+      "misuse": "ניסוח \"עבודה\" שהוא בעצם תיאור של המוצר הקיים.",
+      "control": "במה המשתמש השתמש לפניכם כדי לעשות את אותה עבודה?",
+      "sources": [
+        { "text": "Christensen, C. M., & Raynor, M. E. (2003). The Innovator's Solution. Harvard Business School Press." },
+        { "text": "Christensen, C. M., Hall, T., Dillon, K., & Duncan, D. S. (2016). Know your customers' \"jobs to be done\". Harvard Business Review, 94(9), 54–62." }
+      ]
+    },
+    {
+      "id": "kano",
+      "name": "מודל קאנו",
+      "nameEn": "Kano Model",
+      "author": "נוריאקי קאנו",
+      "authorEn": "Noriaki Kano",
+      "attributedTo": null,
+      "correction": null,
+      "year": 1984,
+      "context": "מאמר בכתב העת של האגודה היפנית לבקרת איכות, על איכות מושכת ואיכות מחויבת.",
+      "assumption": "הקשר בין תכונה לשביעות רצון אינו קווי: יש תכונות שרק חסרונן מורגש, ויש שרק נוכחותן משמחת.",
+      "problemTypes": ["complicated"],
+      "layers": ["skin", "services", "stuff"],
+      "evidence": "partial",
+      "evidenceNote": "הסיווג שוחזר במחקרים רבים, אבל המהימנות שלו משתנה בין שאלונים, והתכונות נודדות בין הקטגוריות לאורך זמן.",
+      "misleading": "כשהשאלון מתורגם בלי תיקוף, או כשבודקים פעם אחת ומניחים שהסיווג קבוע.",
+      "misuse": "להשקיע בתכונה \"מושכת\" ולהזניח תכונה מחויבת שחסרונה מרחיק את כולם.",
+      "control": "איזו תכונה שהייתה מפתיעה לפני חמש שנים היא היום מובנת מאליה?",
+      "sources": [
+        { "text": "Kano, N., Seraku, N., Takahashi, F., & Tsuji, S. (1984). Attractive quality and must-be quality. Journal of the Japanese Society for Quality Control, 14(2), 147–156." },
+        { "text": "Kano, N. (2001). Life cycle and creation of attractive quality. Proceedings of the 4th QMOD Conference, Linköping." }
+      ]
+    },
+    {
+      "id": "okr",
+      "name": "מטרות ותוצאות מפתח",
+      "nameEn": "OKR: Objectives and Key Results",
+      "author": "אנדי גרוב, אינטל",
+      "authorEn": "Andrew S. Grove, Intel",
+      "attributedTo": "ג׳ון דור (John Doerr)",
+      "correction": "דור הביא את השיטה לגוגל ב-1999 והפיץ אותה, אבל היא פותחה באינטל בידי גרוב, כהרחבה של ניהול לפי יעדים של פיטר דרוקר (Peter Drucker), 1954.",
+      "year": 1983,
+      "context": "ספר הניהול \"High Output Management\", על בסיס הניסיון באינטל בשנות ה-70.",
+      "assumption": "יעד מדיד ושאפתני משפר ביצועים, ומה שנמדד מייצג את מה שחשוב.",
+      "problemTypes": ["clear", "complicated", "complex"],
+      "layers": ["services", "space"],
+      "evidence": "partial",
+      "evidenceNote": "תאוריית הצבת המטרות נתמכת היטב במחקר. OKR כשיטה ספציפית כמעט לא נבדק, ויש ראיות לנזקים של יעדים צרים.",
+      "misleading": "כשהתוצאות קשות למדידה, ואז מודדים פעילות במקום שינוי.",
+      "misuse": "תוצאות מפתח שהן רשימת משימות, או בונוס שקשור לעמידה ביעד.",
+      "control": "איך אפשר להשיג את המספר ולפספס את המטרה?",
+      "sources": [
+        { "text": "Grove, A. S. (1983). High Output Management. Random House." },
+        { "text": "Locke, E. A., & Latham, G. P. (2002). Building a practically useful theory of goal setting and task motivation. American Psychologist, 57(9), 705–717.", "url": "https://doi.org/10.1037/0003-066X.57.9.705" },
+        { "text": "Ordóñez, L. D., Schweitzer, M. E., Galinsky, A. D., & Bazerman, M. H. (2009). Goals gone wild. Academy of Management Perspectives, 23(1), 6–16." },
+        { "text": "Doerr, J. (2018). Measure What Matters. Portfolio." }
+      ]
+    },
+    {
+      "id": "reference-class",
+      "name": "תחזית לפי מחלקת ייחוס",
+      "nameEn": "Reference Class Forecasting",
+      "author": "דניאל כהנמן ועמוס טברסקי; יושם בידי בנט פליבירג",
+      "authorEn": "Daniel Kahneman & Amos Tversky; applied by Bent Flyvbjerg",
+      "attributedTo": null,
+      "correction": "כהנמן וטברסקי ניסחו את \"המבט מבחוץ\" ב-1979. פליבירג הפך אותו לשיטת עבודה בפרויקטי תשתית, החל מ-2004.",
+      "year": 1979,
+      "context": "מחקר על הטיות בתחזית אינטואיטיבית, ואחר כך תכנון תחבורה בבריטניה ובדנמרק.",
+      "assumption": "פרויקט חדש דומה מספיק לפרויקטים קודמים, כך שההתפלגות שלהם מנבאת אותו.",
+      "problemTypes": ["complicated", "complex"],
+      "layers": ["site", "structure", "skin", "services"],
+      "evidence": "partial",
+      "evidenceNote": "\"כשל התכנון\" נתמך במחקר נרחב, ונתוני פרויקטים מראים חריגות שיטתיות. יש ביקורת על בחירת מחלקות הייחוס ועל ההכללה.",
+      "misleading": "כשבוחרים רק פרויקטים מוצלחים כמחלקת ייחוס, או כשהפרויקט באמת חדשני.",
+      "misuse": "להשתמש בממוצע ולא בהתפלגות, ולכן להתעלם מהזנב של חריגות קיצוניות.",
+      "control": "כמה מהפרויקטים במחלקת הייחוס חרגו ביותר מ-50%?",
+      "sources": [
+        { "text": "Kahneman, D., & Tversky, A. (1979). Intuitive prediction: Biases and corrective procedures. TIMS Studies in Management Science, 12, 313–327." },
+        { "text": "Flyvbjerg, B. (2006). From Nobel Prize to project management: Getting risks right. Project Management Journal, 37(3), 5–15." }
+      ]
+    },
+    {
+      "id": "rittel-webber",
+      "name": "בעיות מרושעות",
+      "nameEn": "Wicked Problems",
+      "author": "הורסט ריטל ומלווין וובר",
+      "authorEn": "Horst W. J. Rittel & Melvin M. Webber",
+      "attributedTo": null,
+      "correction": null,
+      "year": 1973,
+      "context": "מאמר בכתב העת Policy Sciences, מתוך תכנון עירוני ומדיניות ציבורית באוניברסיטת ברקלי.",
+      "assumption": "בבעיות חברתיות אין הגדרה אובייקטיבית, ולכן אין פתרון נכון אלא רק טוב יותר או גרוע יותר.",
+      "problemTypes": ["complex"],
+      "layers": ["site", "structure", "space"],
+      "evidence": "untested",
+      "evidenceNote": "מסגרת מושגית. משמשת כעדשה לניתוח מדיניות, ולא נבדקה כשיטה מנבאת.",
+      "misleading": "כשכל בעיה קשה מכונה \"מרושעת\" כדי להימנע מהחלטה.",
+      "misuse": "להכריז שהבעיה מרושעת ולעצור, במקום לתכנן סבבי שיפור.",
+      "control": "מה ייחשב שיפור בסבב הבא, ומי קבע את זה?",
+      "quote": {
+        "he": "\"בעיות חברתיות לעולם אינן נפתרות. במקרה הטוב הן נפתרות מחדש, שוב ושוב.\"",
+        "en": "\"Social problems are never solved. At best they are only re-solved—over and over again.\"",
+        "by": "Rittel & Webber, 1973, p. 160"
+      },
+      "sources": [
+        { "text": "Rittel, H. W. J., & Webber, M. M. (1973). Dilemmas in a general theory of planning. Policy Sciences, 4(2), 155–169.", "url": "https://doi.org/10.1007/BF01405730" }
+      ]
+    },
+    {
+      "id": "arnstein",
+      "name": "סולם ההשתתפות",
+      "nameEn": "Ladder of Citizen Participation",
+      "author": "שרי ארנשטיין",
+      "authorEn": "Sherry R. Arnstein",
+      "attributedTo": null,
+      "correction": null,
+      "year": 1969,
+      "context": "מאמר בכתב העת של המכון האמריקאי למתכננים, מתוך תוכניות התחדשות עירונית בארצות הברית.",
+      "assumption": "השתתפות היא חלוקה מחדש של כוח, ולא רק שיתוף מידע.",
+      "problemTypes": ["complex"],
+      "layers": ["site", "structure", "space"],
+      "evidence": "untested",
+      "evidenceNote": "טיפולוגיה נורמטיבית. משמשת לניתוח ולהערכה של תהליכים, ולא נבדקה כמודל מנבא.",
+      "misleading": "כשמניחים שהשלב העליון תמיד עדיף, גם כשהציבור לא מעוניין או לא יכול לשאת באחריות.",
+      "misuse": "לקרוא לכנס הסברה \"שיתוף ציבור\". זה השלב השלישי מתוך שמונה, \"מסירת מידע\".",
+      "control": "באיזה שלב בסולם נמצא התהליך שלכם, ומי יכול לשנות את ההחלטה?",
+      "sources": [
+        { "text": "Arnstein, S. R. (1969). A ladder of citizen participation. Journal of the American Institute of Planners, 35(4), 216–224.", "url": "https://doi.org/10.1080/01944366908977225" }
+      ]
+    },
+    {
+      "id": "cynefin",
+      "name": "מסגרת Cynefin",
+      "nameEn": "Cynefin Framework",
+      "author": "דייב סנודן",
+      "authorEn": "Dave Snowden",
+      "attributedTo": null,
+      "correction": "השם בוולשית, ופירושו בערך \"בית\" או \"מקום שייכות\". המסגרת פותחה ב-IBM ב-1999, ופורסמה במלואה ב-2003 עם סינתיה קורץ (Cynthia Kurtz).",
+      "year": 1999,
+      "context": "ניהול ידע ב-IBM, ואחר כך ייעוץ לממשלות וארגונים.",
+      "assumption": "סוג הקשר בין סיבה לתוצאה קובע את דרך הפעולה הנכונה.",
+      "problemTypes": ["clear", "complicated", "complex", "chaotic"],
+      "layers": ["skin", "services", "space", "stuff"],
+      "evidence": "anecdotal",
+      "evidenceNote": "נשען על מקרי בוחן ועל ניסיון ייעוצי. לא נמצאה בדיקה מבוקרת של השפעתו על החלטות.",
+      "misleading": "כשמסווגים פעם אחת ומניחים שהבעיה נשארת באותו תחום.",
+      "misuse": "להשתמש בתווית \"מורכב\" כדי לדחות ניתוח שאפשר לעשות.",
+      "control": "מה למדת מהניסוי האחרון שלא ידעת לפניו?",
+      "sources": [
+        { "text": "Kurtz, C. F., & Snowden, D. J. (2003). The new dynamics of strategy: Sense-making in a complex and complicated world. IBM Systems Journal, 42(3), 462–483.", "url": "https://doi.org/10.1147/sj.423.0462" },
+        { "text": "Snowden, D. J., & Boone, M. E. (2007). A leader's framework for decision making. Harvard Business Review, 85(11), 68–76." }
+      ]
+    },
+    {
+      "id": "bloom-revised",
+      "name": "הטקסונומיה של בלום, המתוקנת",
+      "nameEn": "Revised Bloom's Taxonomy",
+      "author": "לורין אנדרסון ודייוויד קראתוול",
+      "authorEn": "Lorin W. Anderson & David R. Krathwohl",
+      "attributedTo": "בנג׳מין בלום (Benjamin Bloom)",
+      "correction": "הטקסונומיה המקורית מ-1956 נכתבה בידי ועדה בראשות בלום, ובספר אין פירמידה. הגרסה המתוקנת מ-2001 הוסיפה ממד של סוג ידע, והחליפה את \"הערכה\" ב\"יצירה\" בראש.",
+      "year": 2001,
+      "context": "מיון מטרות לימוד לבחינות ולתכניות לימודים.",
+      "assumption": "אפשר למיין מטרות לימוד לתהליכים קוגניטיביים נפרדים.",
+      "problemTypes": ["clear", "complicated"],
+      "layers": ["space", "stuff"],
+      "evidence": "partial",
+      "evidenceNote": "הקטגוריות שימושיות לניסוח מטרות. ההנחה שכל רמה מחייבת את הקודמת לה לא נתמכה במחקר.",
+      "misleading": "כשמשתמשים בה כסולם: קודם לזכור, ורק בסוף ליצור.",
+      "misuse": "לדחות עבודה יצירתית לסוף הקורס, אחרי שהסטודנטים \"מבינים מספיק\".",
+      "control": "איזו משימה של יצירה אפשר לתת כבר בשבוע הראשון?",
+      "sources": [
+        { "text": "Bloom, B. S. (Ed.), Engelhart, M. D., Furst, E. J., Hill, W. H., & Krathwohl, D. R. (1956). Taxonomy of Educational Objectives, Handbook I: Cognitive Domain. David McKay." },
+        { "text": "Anderson, L. W., & Krathwohl, D. R. (Eds.). (2001). A Taxonomy for Learning, Teaching, and Assessing. Longman." },
+        { "text": "Krathwohl, D. R. (2002). A revision of Bloom's taxonomy: An overview. Theory Into Practice, 41(4), 212–218.", "url": "https://doi.org/10.1207/s15430421tip4104_2" },
+        { "text": "Anderson, L. W., & Sosniak, L. A. (Eds.). (1994). Bloom's Taxonomy: A Forty-Year Retrospective. NSSE Yearbook, 93(2). University of Chicago Press." }
+      ]
+    },
+    {
+      "id": "ikigai-kamiya",
+      "name": "איקיגאי, לפי קמיה",
+      "nameEn": "Ikigai (Kamiya)",
+      "author": "מיאקו קמיה",
+      "authorEn": "Mieko Kamiya",
+      "attributedTo": "תרשים ארבעת המעגלים",
+      "correction": "תרשים ארבעת המעגלים (מה שאת אוהבת, טובה בו, העולם צריך ומשלמים עליו) אינו יפני. הוא פוסט בלוג של מארק וין (Marc Winn) מ-2014, שהדביק את המילה על תרשים \"מטרה\" של אנדרס סוסונאגה (Andrés Zuzunaga). המושג המקורי של קמיה לא כולל רווחיות.",
+      "year": 1966,
+      "context": "ספר של פסיכיאטרית יפנית, \"על משמעות החיים\", שנכתב מתוך עבודה עם חולי צרעת במוסד סגור.",
+      "assumption": "תחושת טעם נובעת מהרגשה שמישהו צריך אותך ושיש לך עתיד, ולא מהצלחה.",
+      "problemTypes": ["complex"],
+      "layers": ["site"],
+      "evidence": "partial",
+      "evidenceNote": "מחקר עוקבה ביפן מצא שהיעדר איקיגאי קשור לתמותה גבוהה יותר. התרשים המערבי עצמו לא נבדק.",
+      "misleading": "כשמחפשים עיסוק אחד שיענה על כל המעגלים, ופוסלים כיוון כי הוא לא רווחי.",
+      "misuse": "תרגיל של קריירה ושיווק עצמי, שמצמצם משמעות לשוק.",
+      "control": "מה נותן לך טעם גם בשבוע שבו לא הרווחת ממנו כלום?",
+      "sources": [
+        { "text": "Kamiya, M. (1966). Ikigai ni tsuite [On the meaning of life]. Misuzu Shobō." },
+        { "text": "Winn, M. (2014). What's your ikigai? The View Inside Me (blog), 14 May 2014." },
+        { "text": "Sone, T., et al. (2008). Sense of life worth living (ikigai) and mortality in Japan: Ohsaki Study. Psychosomatic Medicine, 70(6), 709–715.", "url": "https://doi.org/10.1097/PSY.0b013e31817e7e64" }
+      ]
+    },
+    {
+      "id": "pareto",
+      "name": "ניתוח פארטו",
+      "nameEn": "Pareto Analysis",
+      "author": "ג׳וזף ג׳וראן",
+      "authorEn": "Joseph M. Juran",
+      "attributedTo": "וילפרדו פארטו (Vilfredo Pareto)",
+      "correction": "פארטו תיאר ב-1896 את התפלגות העושר באיטליה. ג׳וראן הכליל את הרעיון ל\"מעטים החיוניים\" בבקרת איכות, וקרא לו על שם פארטו. ב-1975 הוא עצמו כתב שהייחוס היה טעות.",
+      "year": 1951,
+      "context": "\"Quality Control Handbook\", בקרת איכות בתעשייה.",
+      "assumption": "מעט סיבות מייצרות את רוב התוצאות, ואפשר לזהות אותן בספירה.",
+      "problemTypes": ["clear", "complicated"],
+      "layers": ["services", "stuff"],
+      "evidence": "partial",
+      "evidenceNote": "התפלגויות לא שוויוניות נמצאות בנתונים רבים. היחס 80/20 עצמו אינו חוק, ומשתנה מתחום לתחום.",
+      "misleading": "כשהקטגוריות מוגדרות רחב מדי, או כשתקלה נדירה היא המסוכנת ביותר.",
+      "misuse": "להניח 80/20 בלי לספור, ולהצדיק כך הזנחה של מיעוט.",
+      "control": "מה היה האחוז המצטבר בפועל ב-20% הקטגוריות העליונות?",
+      "sources": [
+        { "text": "Pareto, V. (1896). Cours d'économie politique. Rouge, Lausanne." },
+        { "text": "Juran, J. M. (1951). Quality Control Handbook. McGraw-Hill." },
+        { "text": "Juran, J. M. (1975). The non-Pareto principle; mea culpa. Quality Progress, 8(5), 8–9." }
+      ]
+    },
+    {
+      "id": "shearing-layers",
+      "inMatcher": false,
+      "name": "שכבות הגזירה",
+      "nameEn": "Shearing Layers",
+      "author": "פרנק דאפי; הורחב בידי סטיוארט בראנד",
+      "authorEn": "Frank Duffy; extended by Stewart Brand",
+      "attributedTo": "סטיוארט בראנד (Stewart Brand)",
+      "correction": "בראנד הפיץ את הרעיון, אבל דאפי ניסח אותו קודם בארבע שכבות. בראנד הרחיב לשש: אתר, מבנה, מעטפת, מערכות, חלוקת חלל ותכולה.",
+      "year": 1990,
+      "context": "מחקר על ביצועי בנייני משרדים, ואחר כך הספר \"How Buildings Learn\".",
+      "assumption": "בניין, וכל מערכת, הוא שכבות שמשתנות בקצבים שונים, והשכבה האיטית מגבילה את המהירה.",
+      "problemTypes": ["complicated", "complex"],
+      "layers": ["site", "structure", "skin", "services", "space", "stuff"],
+      "evidence": "anecdotal",
+      "evidenceNote": "נשען על מקרי בוחן של בניינים לאורך זמן. משך החיים של כל שכבה הוא הערכה.",
+      "misleading": "כשמניחים שהשכבות נפרדות לגמרי, בעוד שבבניין אמיתי הן חודרות זו לזו.",
+      "misuse": "לתכנן שכבה מהירה כאילו היא איטית, ולקבע אותה.",
+      "control": "איזו שכבה בפרויקט שלך תצטרך להשתנות ראשונה, והאם היא כלואה בתוך שכבה איטית?",
+      "sources": [
+        { "text": "Duffy, F. (1990). Measuring building performance. Facilities, 8(5), 17–20." },
+        { "text": "Brand, S. (1994). How Buildings Learn: What Happens After They're Built. Viking." }
+      ]
+    },
+    {
+      "id": "maslow",
+      "inMatcher": false,
+      "name": "פירמידת הצרכים",
+      "nameEn": "Maslow's Pyramid",
+      "author": "צ׳רלס מקדרמיד",
+      "authorEn": "Charles McDermid",
+      "attributedTo": "אברהם מאסלו (Abraham Maslow)",
+      "correction": "מאסלו כתב ב-1943 על היררכיית צרכים, אבל מעולם לא צייר פירמידה. הפירמידה נוצרה ב-1960 בידי צ׳רלס מקדרמיד, יועץ ארגוני, במאמר על כסף ומוטיבציה.",
+      "year": 1960,
+      "context": "מאמר בכתב העת Business Horizons, \"איך כסף מניע אנשים\".",
+      "assumption": "צרכים מסודרים בסולם קבוע, וצריך לספק את התחתון לפני שהעליון מופיע.",
+      "problemTypes": ["complicated"],
+      "layers": ["site"],
+      "evidence": "partial",
+      "evidenceNote": "סקירה של מחקרים מצאה תמיכה מסוימת בקטגוריות הצרכים, ותמיכה מועטה בסדר ההיררכי.",
+      "misleading": "כשמניחים שאנשים עניים לא מחפשים משמעות, או שצורך אחד \"נסגר\" לפני הבא.",
+      "misuse": "תכנון שירות לפי \"קודם הבסיס\", שמוותר מראש על כבוד ושייכות.",
+      "control": "איזה צורך \"עליון\" הופיע אצל המשתמשים שלך לפני שהבסיסי סופק?",
+      "sources": [
+        { "text": "Maslow, A. H. (1943). A theory of human motivation. Psychological Review, 50(4), 370–396." },
+        { "text": "McDermid, C. D. (1960). How money motivates men. Business Horizons, 3(4), 93–100." },
+        { "text": "Wahba, M. A., & Bridwell, L. G. (1976). Maslow reconsidered. Organizational Behavior and Human Performance, 15(2), 212–240." },
+        { "text": "Bridgman, T., Cummings, S., & Ballard, J. (2019). Who built Maslow's pyramid? Academy of Management Learning & Education, 18(1), 81–98.", "url": "https://doi.org/10.5465/amle.2017.0351" }
+      ]
+    }
+  ],
+
+  "knowledge": {
+    "quoteModel": "rittel-webber",
+    "insight": "הכלי הנכון תלוי בבעיה, לא בפופולריות שלו.",
+    "haiku": ["מפה ישנה", "רחוב שנבנה מחדש", "הקו עוד זוכר"],
+    "haikuNote": "ההייקו מאיר את שכבות הזמן: האתר נשאר, גם כשהמבנה מתחלף.",
+    "inspiration": "בהשראת המפתח הדיכוטומי של ז׳אן-בטיסט למארק (Jean-Baptiste Lamarck), Flore françoise, 1778: זיהוי בשאלות של שני כיוונים."
+  }
+}
