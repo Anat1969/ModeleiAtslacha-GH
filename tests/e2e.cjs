@@ -103,6 +103,7 @@ async function ready(url) {
     // מקרה 2: תקציב פרויקט
     await go('#/result?intent=budget&cynefin=complicated&agreement=yes&layer=structure&unit=org&data=yes');
     ok((await page.locator('main').textContent()).includes('תחזית לפי מחלקת ייחוס'), `${name}: תקציב פרויקט -> מחלקת ייחוס`);
+    ok((await page.locator('[data-tab="counter"]').textContent()).includes('פרה-מורטם'), `${name}: המודל הנגדי לתקציב: פרה-מורטם`);
     ok((await page.locator('.fit-n').textContent()).includes('100'), `${name}: אחוז התאמה מוצג`);
     await shot('result-budget');
 

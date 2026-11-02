@@ -20,7 +20,7 @@ test('תקציב פרויקט: ארגון, מסובך, יש נתונים -> תח
   assert.equal(r.status, 'ok');
   assert.equal(r.state.id, 'reference-class');
   assert.equal(r.primary[0].id, 'reference-class');
-  assert.equal(r.counter.model.id, 'cynefin');
+  assert.equal(r.counter.model.id, 'premortem');
   assert.equal(r.notes.length, 0);
   assert.equal(r.fit, 100);
 });
